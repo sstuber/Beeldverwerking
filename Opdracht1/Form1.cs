@@ -66,19 +66,15 @@ namespace INFOIBV
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
-                    Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
-                    Color updatedColor = Color.FromArgb(255 - pixelColor.R, 255 - pixelColor.G, 255 - pixelColor.B); // Negative image
+                    Color pixelColor = Image[x, y];  // Get the pixel color at coordinate (x,y)
+                    int newColor = (int)(pixelColor.R * 0.2125f + pixelColor.G * 0.7154 + pixelColor.B * 0.072);
+                    Color updatedColor = Color.FromArgb(newColor, newColor, newColor); // Negative image
                     Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
                     progressBar.PerformStep();                              // Increment progress bar
                     
                 }
             }
-            
-            Console.WriteLine(Color.DarkGray.R);
-            Console.WriteLine(Color.DarkGray.G);
-            Console.WriteLine(Color.DarkGray.B);
 
-            Console.WriteLine(Color.DarkGray.A);
 
             //==========================================================================================
 
