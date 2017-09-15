@@ -102,7 +102,7 @@ namespace INFOIBV
                 }
             }
 
-            Image = ApplyGaussianFilter(10, 10, 3, Image);
+            Image = ApplyMedianFilter(11, 11, Image);
 
             //==========================================================================================
 
@@ -119,9 +119,34 @@ namespace INFOIBV
             progressBar.Visible = false; // Hide progress bar
         }
 
+        private Color[,] ApplyMedianFilter(int x, int y, Color[,] image)
+        {
+            int centerX = (int)Math.Ceiling((double)x / 2);
+            int centerY = (int)Math.Ceiling((double)y / 2);
+
+            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
+                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+                {
+                    List<int> intList = new List<int>();
+
+                    for (int i = 0; i < x; i++)
+                        for (int j = 0; j < y; j++)
+                            intList.Add(image[u + i - (centerX - 1), v + j - (centerY - 1)].G);
+
+                    intList.Sort();
+
+                    int median = intList[intList.Count/2];
+
+                    image[u, v] = Color.FromArgb(median,median,median);
+                }
+
+            return image;
+        }
+
         private Color[,] ApplyGaussianFilter(int x, int y, int sigma, Color[,] image)
         {
             double[,] filter = makeGaussianFilterBox(x, y, sigma);
+            Color[,] newImage = new Color[image.GetLength(0),image.GetLength(1)];
 
             int centerX = (int)Math.Ceiling((double)x /2);
             int centerY = (int)Math.Ceiling((double)y / 2);
@@ -131,17 +156,16 @@ namespace INFOIBV
                 {
                     double newValue = 0;
 
-                    for (int i = 0; i < filter.GetLength(0); i++)
-                        for (int j = 0; j < filter.GetLength(1); j++)
+                    for (int i = 0; i < x; i++)
+                        for (int j = 0; j < y; j++)
                             newValue += image[u + i - (centerX - 1) , v + j - ( centerY - 1)].G * filter[i,j];
 
                     int intValue = (int) newValue;
                     Color newColor = Color.FromArgb(intValue, intValue, intValue);
-                    image[u, v] = newColor;
-                    
+                    newImage[u, v] = newColor;
                 }
 
-            return image;
+            return newImage;
         }
 
         private double[,] makeGaussianFilterBox(int x, int y, int sigma)
