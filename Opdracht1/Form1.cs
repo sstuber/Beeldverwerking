@@ -102,6 +102,8 @@ namespace INFOIBV
                 }
             }
 
+            Image = ApplyGaussianFilter(10, 10, 3, Image);
+
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -115,6 +117,58 @@ namespace INFOIBV
 
             pictureBox2.Image = (Image) OutputImage; // Display output image
             progressBar.Visible = false; // Hide progress bar
+        }
+
+        private Color[,] ApplyGaussianFilter(int x, int y, int sigma, Color[,] image)
+        {
+            double[,] filter = makeGaussianFilterBox(x, y, sigma);
+
+            int centerX = (int)Math.Ceiling((double)x /2);
+            int centerY = (int)Math.Ceiling((double)y / 2);
+
+            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
+                for (int v = centerY -1; v < image.GetLength(1) - centerY; v++)
+                {
+                    double newValue = 0;
+
+                    for (int i = 0; i < filter.GetLength(0); i++)
+                        for (int j = 0; j < filter.GetLength(1); j++)
+                            newValue += image[u + i - (centerX - 1) , v + j - ( centerY - 1)].G * filter[i,j];
+
+                    int intValue = (int) newValue;
+                    Color newColor = Color.FromArgb(intValue, intValue, intValue);
+                    image[u, v] = newColor;
+                    
+                }
+
+            return image;
+        }
+
+        private double[,] makeGaussianFilterBox(int x, int y, int sigma)
+        {
+            double[,] filter = new double[x, y];
+            double noemer = 2 * sigma * sigma;
+            double normalizeNoemer = 0;
+
+            int centerX = (int)Math.Ceiling((double)x / 2);
+            int centerY = (int)Math.Ceiling((double)y / 2);
+
+            for (int i = 0; i < x; i++)
+                for (int j = 0; j < y; j++)
+                {
+                    double teller = Math.Pow(i - centerX, 2) + Math.Pow(j - centerY, 2);
+
+                    filter[i, j] = Math.Pow(Math.E, -(teller / noemer));
+                    normalizeNoemer += filter[i, j];
+                }
+
+            double normalizeValue = 1/ normalizeNoemer;
+
+            for (int i = 0; i < x; i++)
+                for (int j = 0; j < y; j++)
+                    filter[i, j] = filter[i, j]*normalizeValue;
+
+            return filter;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
