@@ -63,44 +63,10 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             // example: create a negative image
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    Color pixelColor = Image[x, y]; // Get the pixel color at coordinate (x,y)
-                    int newColor = (int) (pixelColor.R*0.2125f + pixelColor.G*0.7154 + pixelColor.B*0.072);
-                    Color updatedColor = Color.FromArgb(newColor, newColor, newColor); // Negative image
-                    Image[x, y] = updatedColor; // Set the new pixel color at coordinate (x,y)
-                    progressBar.PerformStep(); // Increment progress bar
 
-                }
-            }
+            Image = ApplyGrayScale(Image);
 
-            int aLow = 255;
-            int aHigh = 0;
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    Color pixelColor = Image[x, y];
-                    aLow = pixelColor.G < aLow ? pixelColor.G : aLow;
-                    aHigh = pixelColor.G > aHigh ? pixelColor.G : aHigh;
-                }
-            }
-
-            int multiplier = 255/(aHigh - aLow);
-
-            for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    Color pixelColor = Image[x, y];
-                    int newColor = (pixelColor.G - aLow)*multiplier;
-                    Color updatedColor = Color.FromArgb(newColor, newColor, newColor); // Negative image
-                    Image[x, y] = updatedColor;
-
-                }
-            }
+            Image = ApplyContrastAdjustment(Image);
 
             Image = ApplyMedianFilter(11, 11, Image);
 
@@ -117,6 +83,55 @@ namespace INFOIBV
 
             pictureBox2.Image = (Image) OutputImage; // Display output image
             progressBar.Visible = false; // Hide progress bar
+        }
+
+        private Color[,] ApplyGrayScale(Color[,] image) 
+        {
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    Color pixelColor = image[x, y]; // Get the pixel color at coordinate (x,y)
+                    int newColor = (int)(pixelColor.R * 0.2125f + pixelColor.G * 0.7154 + pixelColor.B * 0.072);
+                    Color updatedColor = Color.FromArgb(newColor, newColor, newColor); // Negative image
+                    image[x, y] = updatedColor; // Set the new pixel color at coordinate (x,y)
+                    progressBar.PerformStep(); // Increment progress bar
+
+                }
+            }
+
+            return image;
+        }
+
+        private Color[,] ApplyContrastAdjustment(Color[,] image)
+        {
+            int aLow = 255;
+            int aHigh = 0;
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    Color pixelColor = image[x, y];
+                    aLow = pixelColor.G < aLow ? pixelColor.G : aLow;
+                    aHigh = pixelColor.G > aHigh ? pixelColor.G : aHigh;
+                }
+            }
+
+            int multiplier = 255 / (aHigh - aLow);
+
+            for (int x = 0; x < InputImage.Size.Width; x++)
+            {
+                for (int y = 0; y < InputImage.Size.Height; y++)
+                {
+                    Color pixelColor = image[x, y];
+                    int newColor = (pixelColor.G - aLow) * multiplier;
+                    Color updatedColor = Color.FromArgb(newColor, newColor, newColor); // Negative image
+                    image[x, y] = updatedColor;
+                }
+            }
+
+            return image;
         }
 
         private Color[,] ApplyMedianFilter(int x, int y, Color[,] image)
