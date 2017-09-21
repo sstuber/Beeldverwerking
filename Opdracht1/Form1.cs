@@ -68,9 +68,11 @@ namespace INFOIBV
 
             Image = ApplyContrastAdjustment(Image);
 
-            Image = ApplyMedianFilter(11, 11, Image);
+            //Image = ApplyMedianFilter(11, 11, Image);
 
             Image = ApplyEdgeDetection(GetSobelEdgeFilter(), Image);
+
+            Image = ApplyThreshold(10, Image);
 
             //==========================================================================================
 
@@ -85,6 +87,23 @@ namespace INFOIBV
 
             pictureBox2.Image = (Image) OutputImage; // Display output image
             progressBar.Visible = false; // Hide progress bar
+        }
+
+        private Color[,] ApplyThreshold(int threshold, Color[,] image)
+        {
+            int width = image.GetLength(0);
+            int heigth = image.GetLength(1);
+            Color[,] appliedImage = new Color[width,heigth];
+            
+            for(int u = 0; u <width;u++)
+                for (int v = 0; v < heigth; v++)
+                {
+                    int newColor = image[u, v].G > threshold ? 0 : 255 ;
+                    appliedImage[u, v] = Color.FromArgb(newColor, newColor, newColor);
+                }
+
+
+            return appliedImage;
         }
 
         private double[,] ClockwiseFilterTurn(double[,] filter)
