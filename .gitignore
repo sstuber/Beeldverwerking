@@ -1,8 +1,12 @@
 # Prerequisites
 *.d
 
+*/*/bin/
+*/*/obj/
+
 */bin/
 */obj/
+
 */.vs/
 
 # Compiled Object files
