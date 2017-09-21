@@ -70,6 +70,8 @@ namespace INFOIBV
 
             Image = ApplyMedianFilter(11, 11, Image);
 
+            Image = ApplyEdgeDetection(GetSobelEdgeFilter(), Image);
+
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -83,6 +85,85 @@ namespace INFOIBV
 
             pictureBox2.Image = (Image) OutputImage; // Display output image
             progressBar.Visible = false; // Hide progress bar
+        }
+
+        private double[,] ClockwiseFilterTurn(double[,] filter)
+        {
+            double[,] turnedFitler = new double[3, 3];
+
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    turnedFitler[i, j] = filter[3 - j - 1, i];
+
+            return turnedFitler;
+        }
+
+        private Color[,] ApplyEdgeDetection(double[,] filter, Color[,] image)
+        {
+            double[,] HxValues = new double[image.GetLength(0), image.GetLength(1)];
+            double[,] HyValues = new double[image.GetLength(0), image.GetLength(1)];
+
+            var normalizedFilter = new double[filter.GetLength(0), filter.GetLength(1)];
+
+            int centerX = (int)Math.Ceiling((double)filter.GetLength(0) / 2);
+            int centerY = (int)Math.Ceiling((double)filter.GetLength(1) / 2);
+
+
+            double normalizeValue = 1f / 8f;
+
+            for (int i = 0; i < filter.GetLength(0); i++)
+                for (int j = 0; j < filter.GetLength(1); j++)
+                    normalizedFilter[i, j] = filter[i, j] * normalizeValue;
+
+            //return filter;
+
+
+
+            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
+                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+                {
+                    double newValue = 0;
+                    for (int i = 0; i < normalizedFilter.GetLength(0); i++)
+                        for (int j = 0; j < normalizedFilter.GetLength(1); j++)
+                        {
+                            newValue += image[u + i - (centerX - 1), v + j - (centerY - 1)].G * normalizedFilter[i, j];
+                        }
+
+                    HxValues[u, v] = newValue;
+                }
+
+            normalizedFilter = ClockwiseFilterTurn(normalizedFilter);
+
+            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
+                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+                {
+                    double newValue = 0;
+                    for (int i = 0; i < normalizedFilter.GetLength(0); i++)
+                        for (int j = 0; j < normalizedFilter.GetLength(1); j++)
+                        {
+                            newValue += image[u + i - (centerX - 1), v + j - (centerY - 1)].G * normalizedFilter[i, j];
+                        }
+
+                    HyValues[u, v] = newValue;
+                }
+
+
+            Color[,] EdgeStrengthImage = new Color[image.GetLength(0), image.GetLength(1)];
+
+
+            // als hy en hx normalized zijn dan 
+            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
+                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+                {
+
+
+                    var edgeStrength = (int)Math.Sqrt(Math.Pow(HxValues[u, v], 2) + Math.Pow(HyValues[u, v], 2));
+                    EdgeStrengthImage[u, v] = Color.FromArgb(edgeStrength, edgeStrength, edgeStrength);
+
+                }
+
+            return EdgeStrengthImage;
+
         }
 
         private Color[,] ApplyGrayScale(Color[,] image) 
@@ -134,6 +215,26 @@ namespace INFOIBV
             return image;
         }
 
+        /* 
+           to do
+           laat nieuwe image returnen
+           maak apply filter function
+           maak normalize filter function 
+
+            */
+
+        private double[,] GetSobelEdgeFilter()
+        {
+            double[,] filter = new double[3, 3]
+            {
+                {-1,0,1},
+                {-2,0,2},
+                {-1,0,1}
+            };
+
+            return filter;
+        }
+
         private Color[,] ApplyMedianFilter(int x, int y, Color[,] image)
         {
             int centerX = (int)Math.Ceiling((double)x / 2);
@@ -173,7 +274,40 @@ namespace INFOIBV
 
                     for (int i = 0; i < x; i++)
                         for (int j = 0; j < y; j++)
+                        {
+                           /* int tempU = u;
+                            int tempI = i;
+
+                            int tempV = v;
+                            int tempJ = j;
+
+                            if (u + i - centerX - 1 < 0)
+                            {
+                                tempU = 0;
+                                tempI = centerX -1;
+                            }
+
+                            if (u + i - centerX > image.GetLength(0))
+                            {
+                                tempU = image.GetLength(0) - 1;
+                                tempI = centerX - 1;
+                            }
+
+
+                            if (v + j - centerY - 1 < 0)
+                            {
+                                tempV = 0;
+                                tempJ = centerY - 1;
+                            }
+
+                            if (v + j - centerY > image.GetLength(1))
+                            {
+                                tempV = image.GetLength(1) - 1;
+                                tempJ = centerY - 1;
+                            }*/
+
                             newValue += image[u + i - (centerX - 1) , v + j - ( centerY - 1)].G * filter[i,j];
+                        }
 
                     int intValue = (int) newValue;
                     Color newColor = Color.FromArgb(intValue, intValue, intValue);
