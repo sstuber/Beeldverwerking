@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms.VisualStyles;
 
 namespace INFOIBV
 {
@@ -68,11 +69,13 @@ namespace INFOIBV
 
             Image = ApplyContrastAdjustment(Image);
 
-            //Image = ApplyMedianFilter(11, 11, Image);
+            Image = ApplyMedianFilter(5, 5, Image);
 
-            Image = ApplyEdgeDetection(GetSobelEdgeFilter(), Image);
+           // Image = ApplyGaussianFilter(5, 5, 2, Image);
 
-            Image = ApplyThreshold(10, Image);
+            /*Image = ApplyEdgeDetection(GetSobelEdgeFilter(), Image);
+
+            Image = ApplyThreshold(10, Image);*/
 
             //==========================================================================================
 
@@ -136,33 +139,65 @@ namespace INFOIBV
 
             //return filter;
 
-
-
-            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
-                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+            for (int u = 0; u < image.GetLength(0) ; u++)
+                for (int v =0; v < image.GetLength(1) ; v++)
                 {
                     double newValue = 0;
-                    for (int i = 0; i < normalizedFilter.GetLength(0); i++)
-                        for (int j = 0; j < normalizedFilter.GetLength(1); j++)
-                        {
-                            newValue += image[u + i - (centerX - 1), v + j - (centerY - 1)].G * normalizedFilter[i, j];
-                        }
+                    double weigth = 0;
 
+                    for (int i = 0; i < filter.GetLength(0); i++)
+                        for (int j = 0; j < filter.GetLength(1); j++)
+                        {
+                            int tempU = u + i - centerX - 1;
+                            int tempV = v + j - centerY - 1;
+                            if (tempU < 0)
+                                tempU = 0;
+
+                            if (tempU > image.GetLength(0))
+                                tempU = image.GetLength(0) - 1;
+
+                            if (tempV < 0)
+                                tempV = 0;
+
+                            if (tempV > image.GetLength(1))
+                                tempV = image.GetLength(1) - 1;
+
+                            weigth += filter[i, j] > 0 ? filter[i, j] : -filter[i, j];
+                            newValue += image[tempU,tempV].G * filter[i, j];
+                        }
+                    newValue = newValue * (1 / 8f);
                     HxValues[u, v] = newValue;
                 }
 
-            normalizedFilter = ClockwiseFilterTurn(normalizedFilter);
+            filter = ClockwiseFilterTurn(filter);
 
-            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
-                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
+            for (int u =0; u < image.GetLength(0) ; u++)
+                for (int v = 0; v < image.GetLength(1) ; v++)
                 {
                     double newValue = 0;
-                    for (int i = 0; i < normalizedFilter.GetLength(0); i++)
-                        for (int j = 0; j < normalizedFilter.GetLength(1); j++)
+                    double weigth = 0;
+                    for (int i = 0; i < filter.GetLength(0); i++)
+                        for (int j = 0; j < filter.GetLength(1); j++)
                         {
-                            newValue += image[u + i - (centerX - 1), v + j - (centerY - 1)].G * normalizedFilter[i, j];
-                        }
+                            int tempU = u + i - centerX - 1;
+                            int tempV = v + j - centerY - 1;
+                            if (tempU < 0)
+                                tempU = 0;
 
+                            if (tempU > image.GetLength(0))
+                                tempU = image.GetLength(0) - 1;
+
+                            if (tempV < 0)
+                                tempV = 0;
+
+                            if (tempV > image.GetLength(1))
+                                tempV = image.GetLength(1) - 1;
+
+                            weigth += filter[i, j] > 0 ? filter[i,j] : -filter[i, j];
+                        newValue += image[tempU,tempV].G * filter[i, j];
+                    }
+
+                    newValue = newValue * (1 / weigth);
                     HyValues[u, v] = newValue;
                 }
 
@@ -173,12 +208,9 @@ namespace INFOIBV
             // als hy en hx normalized zijn dan 
             for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
                 for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
-                {
-
-
+                { 
                     var edgeStrength = (int)Math.Sqrt(Math.Pow(HxValues[u, v], 2) + Math.Pow(HyValues[u, v], 2));
                     EdgeStrengthImage[u, v] = Color.FromArgb(edgeStrength, edgeStrength, edgeStrength);
-
                 }
 
             return EdgeStrengthImage;
@@ -286,47 +318,33 @@ namespace INFOIBV
             int centerX = (int)Math.Ceiling((double)x /2);
             int centerY = (int)Math.Ceiling((double)y / 2);
 
-            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
-                for (int v = centerY -1; v < image.GetLength(1) - centerY; v++)
+            for (int u = 0; u < image.GetLength(0); u++)
+                for (int v = 0; v < image.GetLength(1) ; v++)
                 {
                     double newValue = 0;
+                    double weigth = 0;
 
                     for (int i = 0; i < x; i++)
                         for (int j = 0; j < y; j++)
                         {
-                           /* int tempU = u;
-                            int tempI = i;
-
-                            int tempV = v;
-                            int tempJ = j;
-
-                            if (u + i - centerX - 1 < 0)
-                            {
+                            int tempU = u + i - centerX - 1;
+                            int tempV = v + j - centerY - 1;
+                            if (tempU < 0)
                                 tempU = 0;
-                                tempI = centerX -1;
-                            }
 
-                            if (u + i - centerX > image.GetLength(0))
-                            {
+                            if (tempU > image.GetLength(0))
                                 tempU = image.GetLength(0) - 1;
-                                tempI = centerX - 1;
-                            }
 
-
-                            if (v + j - centerY - 1 < 0)
-                            {
+                            if (tempV < 0)
                                 tempV = 0;
-                                tempJ = centerY - 1;
-                            }
 
-                            if (v + j - centerY > image.GetLength(1))
-                            {
+                            if (tempV > image.GetLength(1))
                                 tempV = image.GetLength(1) - 1;
-                                tempJ = centerY - 1;
-                            }*/
 
-                            newValue += image[u + i - (centerX - 1) , v + j - ( centerY - 1)].G * filter[i,j];
+                            weigth += filter[i, j];
+                            newValue += image[tempU ,tempV].G * filter[i,j];
                         }
+                    newValue = newValue*(1/weigth);
 
                     int intValue = (int) newValue;
                     Color newColor = Color.FromArgb(intValue, intValue, intValue);
@@ -340,7 +358,7 @@ namespace INFOIBV
         {
             double[,] filter = new double[x, y];
             double noemer = 2 * sigma * sigma;
-            double normalizeNoemer = 0;
+            //double normalizeNoemer = 0;
 
             int centerX = (int)Math.Ceiling((double)x / 2);
             int centerY = (int)Math.Ceiling((double)y / 2);
@@ -351,14 +369,14 @@ namespace INFOIBV
                     double teller = Math.Pow(i - centerX, 2) + Math.Pow(j - centerY, 2);
 
                     filter[i, j] = Math.Pow(Math.E, -(teller / noemer));
-                    normalizeNoemer += filter[i, j];
+                    //normalizeNoemer += filter[i, j];
                 }
 
-            double normalizeValue = 1/ normalizeNoemer;
+            //double normalizeValue = 1/ normalizeNoemer;
 
-            for (int i = 0; i < x; i++)
+            /*for (int i = 0; i < x; i++)
                 for (int j = 0; j < y; j++)
-                    filter[i, j] = filter[i, j]*normalizeValue;
+                    filter[i, j] = filter[i, j]*normalizeValue;*/
 
             return filter;
         }
