@@ -62,16 +62,15 @@ namespace INFOIBV
             }
 
             //==========================================================================================
-            // TODO: include here your own code
-            // example: create a negative image
+            // Code from Olaf Kampers (4255194) and Stan van Meerendonk (4284763) starts here
 
             Image = ApplyGrayScale(Image);
 
             Image = ApplyContrastAdjustment(Image);
 
-            //Image = ApplyMedianFilter(5, 5, Image);
+            Image = ApplyMedianFilter(5, 5, Image);
 
-           // Image = ApplyGaussianFilter(5, 5, 2, Image);
+            Image = ApplyGaussianFilter(5, 5, 2, Image);
 
             Image = ApplyEdgeDetection(GetSobelEdgeFilter(), Image);
 
@@ -92,25 +91,29 @@ namespace INFOIBV
             progressBar.Visible = false; // Hide progress bar
         }
 
+        //==========================================================================================
+        // Our code continues from here
+
+        // Function that applies thresholding on an image using a given value
         private Color[,] ApplyThreshold(int threshold, Color[,] image)
         {
             int width = image.GetLength(0);
             int heigth = image.GetLength(1);
             Color[,] appliedImage = new Color[width,heigth];
             
-            for(int u = 0; u <width;u++)
+            for(int u = 0; u < width; u++)
                 for (int v = 0; v < heigth; v++)
                 {
                     int newColor = image[u, v].G > threshold ? 0 : 255 ;
                     appliedImage[u, v] = Color.FromArgb(newColor, newColor, newColor);
                 }
 
-
             return appliedImage;
         }
 
-        #region Edge detection
+        #region Edge Detection using Sobel Filter
 
+        // Array containing the kernel used in the Sobel filter
         private double[,] GetSobelEdgeFilter()
         {
             double[,] filter = new double[3, 3]
@@ -123,6 +126,7 @@ namespace INFOIBV
             return filter;
         }
 
+        // Function that turns the kernel clockwise
         private double[,] ClockwiseFilterTurn(double[,] filter)
         {
             double[,] turnedFitler = new double[3, 3];
@@ -134,6 +138,7 @@ namespace INFOIBV
             return turnedFitler;
         }
 
+        // Function that applies the actual edge detection on an image using the Sobel filter
         private Color[,] ApplyEdgeDetection(double[,] filter, Color[,] image)
         {
             double[,] HxValues = new double[image.GetLength(0), image.GetLength(1)];
@@ -151,6 +156,7 @@ namespace INFOIBV
                     double newValuex = 0;
                     double newValuey = 0;
 
+                    // Loop through the filter while taking the borders of the image into account
                     for (int i = 0; i < filter.GetLength(0); i++)
                         for (int j = 0; j < filter.GetLength(1); j++)
                         {
@@ -189,10 +195,10 @@ namespace INFOIBV
                 }
 
             return edgeStrengthImage;
-
         }
         #endregion
 
+        // Function that converts an image to a single channel grayscale image
         private Color[,] ApplyGrayScale(Color[,] image) 
         {
             for (int x = 0; x < InputImage.Size.Width; x++)
@@ -210,6 +216,7 @@ namespace INFOIBV
             return image;
         }
 
+        // Function that applies the contrast adjustment
         private Color[,] ApplyContrastAdjustment(Color[,] image)
         {
             int aLow = 255;
@@ -241,16 +248,7 @@ namespace INFOIBV
             return image;
         }
 
-        /* 
-           to do
-           laat nieuwe image returnen
-           maak apply filter function
-           maak normalize filter function 
-
-            */
-
-
-
+        // Function that applies the Median filter
         private Color[,] ApplyMedianFilter(int x, int y, Color[,] image)
         {
             int centerX = (int)Math.Ceiling((double)x / 2);
@@ -265,18 +263,19 @@ namespace INFOIBV
                         for (int j = 0; j < y; j++)
                             intList.Add(image[u + i - (centerX - 1), v + j - (centerY - 1)].G);
 
-                    intList.Sort();
+                    intList.Sort(); // Sort the list of integers
 
-                    int median = intList[intList.Count/2];
+                    int median = intList[intList.Count/2]; // Take the median of the values in the list
 
-                    image[u, v] = Color.FromArgb(median,median,median);
+                    image[u, v] = Color.FromArgb(median,median,median); // Adjust the color value accordingly
                 }
 
             return image;
         }
 
-#region Gaussion filter
+        #region Gaussian Filter
 
+        // Creates a Gaussian filter kernel of size x * y and applies it to an image
         private Color[,] ApplyGaussianFilter(int x, int y, int sigma, Color[,] image)
         {
             double[,] filter = makeGaussianFilterBox(x, y, sigma);
@@ -291,6 +290,7 @@ namespace INFOIBV
                     double newValue = 0;
                     double weigth = 0;
 
+                    // Loop through the filter while taking the borders of the image into account
                     for (int i = 0; i < x; i++)
                         for (int j = 0; j < y; j++)
                         {
@@ -321,6 +321,7 @@ namespace INFOIBV
             return newImage;
         }
 
+        // Creates the filter used in the Gaussian function above
         private double[,] makeGaussianFilterBox(int x, int y, int sigma)
         {
             double[,] filter = new double[x, y];
