@@ -62,17 +62,20 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             // example: create a negative image
-          /*  for (int x = 0; x < InputImage.Size.Width; x++)
-            {
-                for (int y = 0; y < InputImage.Size.Height; y++)
-                {
-                    Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
-                    Color updatedColor = Color.FromArgb(255 - pixelColor.R, 255 - pixelColor.G, 255 - pixelColor.B); // Negative image
-                    Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
-                    progressBar.PerformStep();                              // Increment progress bar
-                }
-            }*/
+            /*  for (int x = 0; x < InputImage.Size.Width; x++)
+              {
+                  for (int y = 0; y < InputImage.Size.Height; y++)
+                  {
+                      Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
+                      Color updatedColor = Color.FromArgb(255 - pixelColor.R, 255 - pixelColor.G, 255 - pixelColor.B); // Negative image
+                      Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
+                      progressBar.PerformStep();                              // Increment progress bar
+                  }
+              }*/
+            MessageBox.Show("count is " + CountValues(Image)) ;
+
             Image = ApplyOpening(Image, GetstructureElement(), null);
+            Image = ApplyComplement(Image);
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -84,9 +87,84 @@ namespace INFOIBV
                 }
             }
             
+
             pictureBox2.Image = (Image)OutputImage;                         // Display output image
             progressBar.Visible = false;                                    // Hide progress bar
         }
+
+        private int CountValues(Color[,] image)
+        {
+            Dictionary<int,int> valueDictionary = new Dictionary<int, int>();
+
+            for (int u = 0; u < image.GetLength(0); u++)
+                for (int v = 0; v < image.GetLength(1); v++)  
+                    if(!valueDictionary.ContainsKey(image[u, v].G))
+                        valueDictionary.Add(image[u,v].G,0);
+
+            return valueDictionary.Count;
+        }
+
+        private Color[,] ApplyAnd(Color[,] firstImage, Color[,] secondImage)
+        {
+
+            if (firstImage.GetLength(0) != secondImage.GetLength(0) ||
+                firstImage.GetLength(1) != secondImage.GetLength(1))
+            {
+                MessageBox.Show("Error images not the same size");
+                return firstImage;
+            }
+
+            Color[,] newImage = new Color[firstImage.GetLength(0),firstImage.GetLength(1)];
+
+            for (int u = 0; u < firstImage.GetLength(0); u++)
+                for (int v = 0; v < firstImage.GetLength(1); v++)
+                {
+                    int newValue = firstImage[u, v].G == 0 && secondImage[u, v].G == 0 ? 0 : 255;
+                    newImage[u, v] = Color.FromArgb(newValue, newValue, newValue);
+                }
+
+
+            return newImage;
+        }
+
+        private Color[,] ApplyOr(Color[,] firstImage, Color[,] secondImage)
+        {
+
+            if (firstImage.GetLength(0) != secondImage.GetLength(0) ||
+                firstImage.GetLength(1) != secondImage.GetLength(1))
+            {
+                MessageBox.Show("Error images not the same size");
+                return firstImage;
+            }
+
+            Color[,] newImage = new Color[firstImage.GetLength(0), firstImage.GetLength(1)];
+
+            for (int u = 0; u < firstImage.GetLength(0); u++)
+                for (int v = 0; v < firstImage.GetLength(1); v++)
+                {
+                    int newValue = firstImage[u, v].G == 0 || secondImage[u, v].G == 0 ? 0 : 255;
+                    newImage[u, v] = Color.FromArgb(newValue, newValue, newValue);
+                }
+
+
+            return newImage;
+        }
+
+        private Color[,] ApplyComplement(Color[,] image)
+        {
+            Color[,] newImage = new Color[image.GetLength(0),image.GetLength(1)];
+            int maxValue = 255;
+
+            for (int u = 0; u < image.GetLength(0); u++)
+                for (int v = 0; v < image.GetLength(1); v++)
+                {
+                    int newValue = maxValue - image[u, v].G;
+                    newImage[u, v] = Color.FromArgb(newValue, newValue, newValue);
+                }
+
+            return newImage;
+        }
+
 
         private double[,] GetstructureElement()
         {
