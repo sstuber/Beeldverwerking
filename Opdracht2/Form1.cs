@@ -62,7 +62,7 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             // example: create a negative image
-            for (int x = 0; x < InputImage.Size.Width; x++)
+          /*  for (int x = 0; x < InputImage.Size.Width; x++)
             {
                 for (int y = 0; y < InputImage.Size.Height; y++)
                 {
@@ -71,7 +71,8 @@ namespace INFOIBV
                     Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
                     progressBar.PerformStep();                              // Increment progress bar
                 }
-            }
+            }*/
+            Image = ApplyOpening(Image, GetstructureElement(), null);
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -86,7 +87,128 @@ namespace INFOIBV
             pictureBox2.Image = (Image)OutputImage;                         // Display output image
             progressBar.Visible = false;                                    // Hide progress bar
         }
-        
+
+        private double[,] GetstructureElement()
+        {
+            return new double[3,3]
+            {
+                {1,1,1},
+                {1,2,1},
+                {1,1,1}
+            };
+        }
+
+        private Color[,] ApplyOpening(Color[,] image, double[,] structure, Color[,] controlImage)
+        {
+            Color[,] newImage = ApplyErosion(image, structure, controlImage);
+            newImage = ApplyDilation(newImage, structure, controlImage);
+
+            return newImage;
+        }
+
+        private Color[,] ApplyClosing(Color[,] image, double[,] structure, Color[,] controlImage)
+        {
+            Color[,] newImage = ApplyDilation(image, structure, controlImage);
+            newImage = ApplyErosion(newImage, structure, controlImage);
+
+            return newImage;
+        }
+
+        // Function that applies the Median filter
+        private Color[,] ApplyDilation(Color[,] image, double[,] structure, Color[,] controlImage)
+        {
+            int x = structure.GetLength(0);
+            int y = structure.GetLength(1);
+
+            int centerX = x / 2;
+            int centerY = y / 2;
+
+            Color [,] newImage = new Color[image.GetLength(0),image.GetLength(1)];
+
+            for (int u = 0; u < image.GetLength(0); u++)
+                for (int v = 0; v < image.GetLength(1); v++)
+                {
+                    List<int> intList = new List<int>();
+
+                    for (int i = 0; i < x; i++)
+                        for (int j = 0; j < y; j++)
+                        {
+                            int tempU = u + i - centerX;
+                            int tempV = v + j - centerY;
+                            if (tempU < 0)
+                               continue;
+
+                            if (tempU >= image.GetLength(0))
+                                continue;
+
+                            if (tempV < 0)
+                                continue;
+
+                            if (tempV >= image.GetLength(1))
+                                continue;
+                            intList.Add(image[tempU, tempV].G + (int)structure[i,j]);
+                        }
+
+                    intList.Sort(); // Sort the list of integers
+
+                    int newValue = Math.Min( intList[intList.Count-1], 255); // Take the highest of the values in the list
+
+                    if (controlImage != null) // clamp onto the control image 
+                        newValue = Math.Min(controlImage[u, v].G, newValue);
+
+                    newImage[u, v] = Color.FromArgb(newValue, newValue, newValue); // Adjust the color value accordingly
+                }
+
+            return newImage;
+        }
+
+        private Color[,] ApplyErosion(Color[,] image, double[,] structure, Color[,] controlImage)
+        {
+            int x = structure.GetLength(0);
+            int y = structure.GetLength(1);
+
+            int centerX = x / 2;
+            int centerY = y / 2;
+
+            Color[,] newImage = new Color[image.GetLength(0), image.GetLength(1)];
+
+            for (int u = 0; u < image.GetLength(0); u++)
+                for (int v = 0; v < image.GetLength(1); v++)
+                {
+                    List<int> intList = new List<int>();
+
+                    for (int i = 0; i < x; i++)
+                        for (int j = 0; j < y; j++)
+                        {
+                            int tempU = u + i - centerX;
+                            int tempV = v + j - centerY;
+                            if (tempU < 0)
+                                continue;
+
+                            if (tempU >= image.GetLength(0))
+                                continue;
+
+                            if (tempV < 0)
+                                continue;
+
+                            if (tempV >= image.GetLength(1))
+                                continue;
+                            intList.Add(image[tempU, tempV].G - (int)structure[i, j]);
+                        }
+
+                    intList.Sort(); // Sort the list of integers
+
+                    int newValue = Math.Max(intList[0], 0); // Take the highest of the values in the list
+
+                    if (controlImage != null) // clamp onto the control image 
+                        newValue = Math.Max(controlImage[u, v].G, newValue);
+
+                    newImage[u, v] = Color.FromArgb(newValue, newValue, newValue); // Adjust the color value accordingly
+                }
+
+            return newImage;
+        }
+
         private void saveButton_Click(object sender, EventArgs e)
         {
             if (OutputImage == null) return;                                // Get out if no output image
