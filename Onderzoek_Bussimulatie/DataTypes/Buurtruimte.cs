@@ -15,7 +15,7 @@ namespace Onderzoek_Bussimulatie
         public abstract void AcceptNewSolution(Solution solution);
 
         // geeft delta cost. Negative kost is beter
-        public abstract int GetCost();
+        public abstract int GetDifference(Solution solution);
 
        // public abstract bool IsOverTime();
     }

@@ -10,10 +10,12 @@ namespace Onderzoek_Bussimulatie
     {
         public int solutionScore = 0;
         public int[] peopleDistribution;
+        public bool[] busDistribution;
 
-        public Solution(int[] peopleDistribution)
+        public Solution(int[] peopleDistribution, bool[] startSolution)
         {
             this.peopleDistribution = peopleDistribution;
+            busDistribution = startSolution;
         }
 
 
