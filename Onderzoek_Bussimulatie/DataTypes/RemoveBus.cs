@@ -29,8 +29,15 @@ namespace Onderzoek_Bussimulatie
 
         public override int GetDifference(Solution solution)
         {
+            bool[] newDistribution = new bool[solution.busDistribution.Length];
+
+            solution.busDistribution.CopyTo(newDistribution, 0);
+            newDistribution[_oldplace] = false;
+
+            _newScore = Simulation.CompleteSimulation(solution.peopleDistribution, newDistribution);
+
+            return _newScore - solution.solutionScore;
             //this.cost is simulate new situation cost
-            throw new NotImplementedException();
         }
     }
 }
