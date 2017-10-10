@@ -21,7 +21,15 @@ namespace Onderzoek_Bussimulatie
 
         public Solution Copy()
         {
-            return this;
+            var newPeopleDistribution = (int[])peopleDistribution.Clone();
+            var newbusDistribution = (bool[])busDistribution.Clone();
+
+            var solution = new Solution(newPeopleDistribution, newbusDistribution)
+            {
+                solutionScore = solutionScore
+            };
+
+            return solution;
         }
     }
 }
