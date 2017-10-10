@@ -40,7 +40,7 @@ namespace Onderzoek_Bussimulatie
 
         }
 
-        public Solution SimulateThis(Solution solution)
+        public Solution SimulateThis(int[] people, bool[] bus)
         {
           /*  s.bestOrderlijst = null;
             s.bestOverCapacity = null;
@@ -52,6 +52,10 @@ namespace Onderzoek_Bussimulatie
              }
              else
                  bestSolution = s;*/
+
+            var solution = new Solution(people,bus);
+
+            solution.solutionScore = Simulation.CompleteSimulation(solution.peopleDistribution, solution.busDistribution);
 
             bestSolution = solution.Copy();
 
