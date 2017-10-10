@@ -59,7 +59,7 @@ namespace Onderzoek_Bussimulatie
             {
                BuurtRuimte r = zoeker.ZoekBuurtRuimte(solution);
 
-                int cost = r.GetCost();
+                int cost = r.GetDifference(solution);
 
                 if (cost <= 0)
                 { // buurtruimte is beter? accepteer
