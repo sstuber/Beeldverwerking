@@ -25,6 +25,7 @@ namespace Onderzoek_Bussimulatie
         {
             solution.busDistribution[_newBusPlace] = true;
             solution.solutionScore = _newScore;
+            solution.busCount++;
         }
 
         public override int GetDifference(Solution solution)

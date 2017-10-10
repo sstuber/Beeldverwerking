@@ -22,11 +22,17 @@ namespace Onderzoek_Bussimulatie
             // FALSE = nothing happens
             bool[] busSchedule = CreateInitialSchedule();
 
+            SimulatedAnnealing annealing = new SimulatedAnnealing();
+
+            var solution = annealing.SimulateThis(distribution, busSchedule);
+
+
+
             // ~ Call simulated annealing here
-            int score = Simulation.CompleteSimulation(distribution, busSchedule); // Call this function to run complete simulation
+           // int score = Simulation.CompleteSimulation(distribution, busSchedule); // Call this function to run complete simulation
 
             // Display results of the final solution
-            Console.WriteLine("Score: " + score);
+            Console.WriteLine("Score: " + solution.solutionScore);
             Console.ReadLine();
         }
 

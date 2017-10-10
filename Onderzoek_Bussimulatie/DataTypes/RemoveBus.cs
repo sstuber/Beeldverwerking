@@ -24,6 +24,7 @@ namespace Onderzoek_Bussimulatie
         {
             solution.busDistribution[_oldplace] = false;
             solution.solutionScore = _newScore;
+            solution.busCount--;
 
         }
 

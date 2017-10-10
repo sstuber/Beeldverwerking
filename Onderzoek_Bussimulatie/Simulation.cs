@@ -22,7 +22,7 @@ namespace Onderzoek_Bussimulatie
             waitingLine = new Queue();
 
             // Simulate for 60 timesteps
-            Console.WriteLine("--- Simulating 60 timesteps ---");
+            //Console.WriteLine("--- Simulating 60 timesteps ---");
             for (int t = 0; t < 60; t++)
                 SimulateTimestep(t, distribution, busSchedule);
 
@@ -31,7 +31,9 @@ namespace Onderzoek_Bussimulatie
                 totalScore += p.waitingTime + 200; // Waiting time of people left at the station + additional penalty
 
             // Display people remaining on the station
-            Console.WriteLine("People Remaining: " + waitingLine.Count);
+            //Console.WriteLine("People Remaining: " + waitingLine.Count);
+
+            //Console.WriteLine("Simulation end score: " + totalScore);
             return totalScore;
         }
         // Simulates one timestep
@@ -52,7 +54,7 @@ namespace Onderzoek_Bussimulatie
             if (busSchedule[timeStep])
             {
                 currentBus = new Bus();
-                totalScore += 1000; // Cost for new bus is added to the total score
+                totalScore += 40000; // Cost for new bus is added to the total score
             }
 
             // Remove people from the queue

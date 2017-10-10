@@ -9,6 +9,8 @@ namespace Onderzoek_Bussimulatie
     class Solution
     {
         public int solutionScore = 0;
+        public int busCount = 0;
+
         public int[] peopleDistribution;
         public bool[] busDistribution;
 
@@ -16,6 +18,10 @@ namespace Onderzoek_Bussimulatie
         {
             this.peopleDistribution = peopleDistribution;
             busDistribution = startSolution;
+
+            for (int i =0; i< busDistribution.Length;i++)
+                if (busDistribution[i])
+                    busCount++;
         }
 
 

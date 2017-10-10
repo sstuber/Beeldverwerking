@@ -31,7 +31,7 @@ namespace Onderzoek_Bussimulatie
         public SimulatedAnnealing(int t)
         {
            // this.zoeker = new BuurtRuimteZoeker();
-            _maxQ = 50000;
+            _maxQ = 5000;
             this.t = t;
             alpha = 0.99;
 
@@ -39,6 +39,7 @@ namespace Onderzoek_Bussimulatie
             iteraties = 1;
 
         }
+
 
         public Solution SimulateThis(int[] people, bool[] bus)
         {
@@ -53,7 +54,7 @@ namespace Onderzoek_Bussimulatie
              else
                  bestSolution = s;*/
 
-            var solution = new Solution(people,bus);
+            Solution solution = new Solution(people,bus);
 
             solution.solutionScore = Simulation.CompleteSimulation(solution.peopleDistribution, solution.busDistribution);
 
@@ -99,7 +100,7 @@ namespace Onderzoek_Bussimulatie
         // zijn we d'r al? 
         private bool StopCondition(Solution s)
         {
-            if (iteraties > 50000000 /*&& ( Program.overTime.Count == 0 && Program.overCapacity.Count == 0)*/)
+            if (iteraties > 100000 /*&& ( Program.overTime.Count == 0 && Program.overCapacity.Count == 0)*/)
                 return true;
 
             if (teller > 10000)
@@ -131,7 +132,7 @@ namespace Onderzoek_Bussimulatie
 
             iteraties++;
 
-            if (iteraties % 10000000 == 0)
+            if (iteraties % 10000 == 0)
                 Console.WriteLine(iteraties);
         }
     }
