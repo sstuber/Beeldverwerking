@@ -25,7 +25,7 @@ namespace Onderzoek_Bussimulatie
             solution.busDistribution[_oldplace] = false;
             solution.solutionScore = _newScore;
             solution.busCount--;
-
+            solution.peopleRemaining = Simulation.waitingLine.Count;
         }
 
         public override int GetDifference(Solution solution)

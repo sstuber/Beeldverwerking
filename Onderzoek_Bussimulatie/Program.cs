@@ -25,7 +25,7 @@ namespace Onderzoek_Bussimulatie
 
                 var solution = annealing.SimulateThis(distribution, busSchedule);
                 // Display results of the final solution
-                Console.WriteLine("Peaks: " + peaks + ", Score: " + solution.solutionScore);
+                Console.WriteLine("Peaks: " + peaks + ", Score: " + solution.solutionScore + ", Total busses: " + solution.busCount + ", Remaining people: " + solution.peopleRemaining);
             }
             
             Console.ReadLine();

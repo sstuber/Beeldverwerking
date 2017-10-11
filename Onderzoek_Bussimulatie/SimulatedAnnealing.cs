@@ -57,6 +57,7 @@ namespace Onderzoek_Bussimulatie
             Solution solution = new Solution(people,bus);
 
             solution.solutionScore = Simulation.CompleteSimulation(solution.peopleDistribution, solution.busDistribution);
+            solution.peopleRemaining = Simulation.waitingLine.Count;
 
             bestSolution = solution.Copy();
 

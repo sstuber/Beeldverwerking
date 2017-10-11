@@ -10,6 +10,7 @@ namespace Onderzoek_Bussimulatie
     {
         public int solutionScore = 0;
         public int busCount = 0;
+        public int peopleRemaining = 0;
 
         public int[] peopleDistribution;
         public bool[] busDistribution;
@@ -32,7 +33,8 @@ namespace Onderzoek_Bussimulatie
 
             var solution = new Solution(newPeopleDistribution, newbusDistribution)
             {
-                solutionScore = solutionScore
+                solutionScore = solutionScore,
+                peopleRemaining = peopleRemaining
             };
 
             return solution;
