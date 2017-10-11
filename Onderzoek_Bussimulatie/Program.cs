@@ -11,7 +11,7 @@ namespace Onderzoek_Bussimulatie
         static void Main(string[] args)
         {
             // Distribute total people over selected amount of peaks
-            for (int i = 1; i < 60; i += 5)
+            for (int i = 31; i < 60; i += 5)
             {
                 double peaks = i;
                 double totalPeople = 4000; // Total people in simulation
@@ -40,6 +40,9 @@ namespace Onderzoek_Bussimulatie
             int finalPeak = (int)(peakHeight + (totalPeople - peakHeight * peaks)); // Adjust final peak
 
             int counter = 0;
+            int factor = (int)(60 / peaks);
+            int difference = (int)(60 - peaks) - 1;
+            int diffCounter = 0;
             for (int i = 0; i < peaks; i++)
             {
                 if (i == (int)peaks - 1)
@@ -47,8 +50,16 @@ namespace Onderzoek_Bussimulatie
                 else
                     distribution[counter] = peakHeight;
 
-                //Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
-                counter += (int)(60 / peaks);
+                Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
+
+                // Improve distribution of large amount of peaks
+                if (factor == 1 && i%3 != 0 && diffCounter < difference)
+                {
+                    counter += 2;
+                    diffCounter++;
+                }
+                else
+                    counter += factor;
             }
             return distribution;
         }
