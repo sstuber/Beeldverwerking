@@ -11,28 +11,23 @@ namespace Onderzoek_Bussimulatie
         static void Main(string[] args)
         {
             // Distribute total people over selected amount of peaks
-            Console.WriteLine("Select amount of peaks in an hour: ");
-            double peaks = double.Parse(Console.ReadLine());
+            for (int i = 1; i < 60; i += 5)
+            {
+                double peaks = i;
+                double totalPeople = 4000; // Total people in simulation
+                int[] distribution = DistributePeople(totalPeople, peaks);
+                // Represents the schedule for the busses
+                // TRUE = new bus arrives at timestep index
+                // FALSE = nothing happens
+                bool[] busSchedule = CreateInitialSchedule();
 
-            double totalPeople = 4000; // Total people in simulation
-            int[] distribution = DistributePeople(totalPeople, peaks);
+                SimulatedAnnealing annealing = new SimulatedAnnealing();
 
-            // Represents the schedule for the busses
-            // TRUE = new bus arrives at timestep index
-            // FALSE = nothing happens
-            bool[] busSchedule = CreateInitialSchedule();
-
-            SimulatedAnnealing annealing = new SimulatedAnnealing();
-
-            var solution = annealing.SimulateThis(distribution, busSchedule);
-
-
-
-            // ~ Call simulated annealing here
-           // int score = Simulation.CompleteSimulation(distribution, busSchedule); // Call this function to run complete simulation
-
-            // Display results of the final solution
-            Console.WriteLine("Score: " + solution.solutionScore);
+                var solution = annealing.SimulateThis(distribution, busSchedule);
+                // Display results of the final solution
+                Console.WriteLine("Peaks: " + peaks + ", Score: " + solution.solutionScore);
+            }
+            
             Console.ReadLine();
         }
 
@@ -52,7 +47,7 @@ namespace Onderzoek_Bussimulatie
                 else
                     distribution[counter] = peakHeight;
 
-                Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
+                //Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
                 counter += (int)(60 / peaks);
             }
             return distribution;
