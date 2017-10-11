@@ -10,7 +10,7 @@ namespace Onderzoek_Bussimulatie
     class Bus
     {
         public int peopleInBus = 0; // Amount of people currently in the bus
-        public int capacity = 179; // Capacity of the bus
+        public int capacity = 170; // Capacity of the bus
         public int waitingTime = 0; // Time bus has been at the station
     }
 }

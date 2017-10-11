@@ -20,9 +20,9 @@ namespace Onderzoek_Bussimulatie
         public SimulatedAnnealing()
         {
             this.zoeker = new BuurtRuimteZoeker();
-            _maxQ = 50000;
-            t = 3000;
-            alpha = 0.99;
+            _maxQ = 250;
+            t = 400000;
+            alpha = 0.95;
 
             qCounter = _maxQ;
             iteraties = 1;
@@ -33,7 +33,7 @@ namespace Onderzoek_Bussimulatie
            // this.zoeker = new BuurtRuimteZoeker();
             _maxQ = 5000;
             this.t = t;
-            alpha = 0.99;
+            alpha = 0.95;
 
             qCounter = _maxQ;
             iteraties = 1;

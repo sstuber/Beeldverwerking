@@ -28,7 +28,7 @@ namespace Onderzoek_Bussimulatie
 
             // Add waiting time and other penalties to the final score
             foreach (Person p in waitingLine)
-                totalScore += p.waitingTime + 200; // Waiting time of people left at the station + additional penalty
+                totalScore += p.waitingTime * p.waitingTime + 200; // Waiting time of people left at the station + additional penalty
 
             // Display people remaining on the station
             //Console.WriteLine("People Remaining: " + waitingLine.Count);
@@ -54,7 +54,7 @@ namespace Onderzoek_Bussimulatie
             if (busSchedule[timeStep])
             {
                 currentBus = new Bus();
-                totalScore += 40000; // Cost for new bus is added to the total score
+                totalScore += 10000; // Cost for new bus is added to the total score
             }
 
             // Remove people from the queue
@@ -64,7 +64,7 @@ namespace Onderzoek_Bussimulatie
                 {
                     // Remove person from queue, increase bus counter and score
                     Person p = (Person)waitingLine.Dequeue();
-                    totalScore += p.waitingTime;
+                    totalScore += p.waitingTime *p.waitingTime;
                     currentBus.peopleInBus++;
                 }
 
