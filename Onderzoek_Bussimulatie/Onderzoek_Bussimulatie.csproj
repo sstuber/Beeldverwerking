@@ -49,6 +49,7 @@
     <Compile Include="BuurtRuimteZoeker.cs" />
     <Compile Include="DataTypes\MoveBus.cs" />
     <Compile Include="DataTypes\Nullruimte.cs" />
+    <Compile Include="FixedDistribution.cs" />
     <Compile Include="Person.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

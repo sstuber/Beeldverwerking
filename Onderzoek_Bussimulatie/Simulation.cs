@@ -40,7 +40,7 @@ namespace Onderzoek_Bussimulatie
         static void SimulateTimestep(int timeStep, int[] distribution, bool[] busSchedule)
         {
             // Add people to the queue according to the distribution
-            if (distribution[timeStep] != null)
+            if (distribution[timeStep] != 0)
             {
                 for (int i = 0; i < distribution[timeStep]; i++)
                     waitingLine.Enqueue(new Person());
