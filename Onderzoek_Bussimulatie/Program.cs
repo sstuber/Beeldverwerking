@@ -11,7 +11,7 @@ namespace Onderzoek_Bussimulatie
         static void Main(string[] args)
         {
             // Distribute total people over selected amount of peaks
-            for (int i = 31; i < 60; i += 5)
+            for (int i = 31; i < 61; i += 5)
             {
                 double peaks = i;
                 double totalPeople = 4000; // Total people in simulation
@@ -39,27 +39,82 @@ namespace Onderzoek_Bussimulatie
             int peakHeight = (int)Math.Ceiling(averagePeak); // Average people in peak
             int finalPeak = (int)(peakHeight + (totalPeople - peakHeight * peaks)); // Adjust final peak
 
+            // Calculate variables used in the distribution
             int counter = 0;
             int factor = (int)(60 / peaks);
-            int difference = (int)(60 - peaks) - 1;
-            int diffCounter = 0;
-            for (int i = 0; i < peaks; i++)
+            int difference = (int)(60 - peaks);
+            if (difference > 0 && factor == 1)
             {
-                if (i == (int)peaks - 1)
-                    distribution[counter] = finalPeak;
-                else
-                    distribution[counter] = peakHeight;
+                // Set variables
+                int remainder = (int) (peaks - difference);
+                int mainDivider = (difference > remainder) ? 2 : 1;
+                int groupSize = (mainDivider == 2) ? (difference/remainder) : (remainder/difference);
+                int groupTotals = (mainDivider == 2) ? remainder : difference;
+                int finalSize = (mainDivider == 2)
+                    ? groupSize + (difference - (groupSize*remainder))
+                    : groupSize + (remainder - (groupSize*difference));
 
-                Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
-
-                // Improve distribution of large amount of peaks
-                if (factor == 1 && i%3 != 0 && diffCounter < difference)
+                // Fill the array
+                int diffCounter = 0;
+                int groupCounter = 0;
+                int completeGroups = 0;
+                for (int i = 0; i < peaks; i++)
                 {
-                    counter += 2;
-                    diffCounter++;
+                    if (completeGroups >= groupTotals - 1)
+                        groupSize = finalSize;
+
+                    if (i == (int) peaks - 1)
+                        distribution[counter] = finalPeak;
+                    else
+                        distribution[counter] = peakHeight;
+
+                    Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
+
+                    // Improve distribution of large amount of peaks
+                    if (mainDivider == 2) // For rounding down
+                    {
+                        if (groupCounter < groupSize && diffCounter < difference)
+                        {
+                            counter += factor + 1;
+                            diffCounter++;
+                        }
+                        else
+                        {
+                            counter += factor;
+                            groupCounter = -1;
+                            completeGroups++;
+                        }
+                    }
+                    else // For rounding up
+                    {
+                        if (groupCounter < groupSize - 1 && diffCounter < remainder)
+                        {
+                            counter += factor;
+                            diffCounter++;
+                        }
+                        else
+                        {
+                            counter += factor + 1;
+                            groupCounter = -1;
+                            completeGroups++;
+                        }
+                    }
+                    groupCounter++;
                 }
-                else
-                    counter += factor;
+            }
+            else
+            {
+                // Use general distribution for other 
+                for (int i = 0; i < peaks; i++)
+                {
+                    if (i == (int)peaks - 1)
+                        distribution[counter] = finalPeak;
+                    else
+                        distribution[counter] = peakHeight;
+
+                    Console.WriteLine("Peak " + i + " on timestep " + counter + " contains " + distribution[counter] + " people");
+                    counter += (int)(60 / peaks);
+                }
             }
             return distribution;
         }
