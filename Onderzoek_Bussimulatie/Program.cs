@@ -17,6 +17,7 @@ namespace Onderzoek_Bussimulatie
                 double peaks = i;
                 double totalPeople = 4000; // Total people in simulation
                 int[] distribution = DistributePeople(totalPeople, peaks);
+
                 // Represents the schedule for the busses
                 // TRUE = new bus arrives at timestep index
                 // FALSE = nothing happens
@@ -25,6 +26,7 @@ namespace Onderzoek_Bussimulatie
                 SimulatedAnnealing annealing = new SimulatedAnnealing();
 
                 var solution = annealing.SimulateThis(distribution, busSchedule);
+
                 // Display results of the final solution
                 Console.WriteLine("Peaks: " + peaks + ", Score: " + solution.solutionScore + ", Total busses: " + solution.busCount + ", Remaining people: " + solution.peopleRemaining);
             }
