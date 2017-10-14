@@ -62,20 +62,23 @@ namespace INFOIBV
             //==========================================================================================
             // TODO: include here your own code
             // example: create a negative image
-            /*  for (int x = 0; x < InputImage.Size.Width; x++)
-              {
-                  for (int y = 0; y < InputImage.Size.Height; y++)
-                  {
-                      Color pixelColor = Image[x, y];                         // Get the pixel color at coordinate (x,y)
-                      Color updatedColor = Color.FromArgb(255 - pixelColor.R, 255 - pixelColor.G, 255 - pixelColor.B); // Negative image
-                      Image[x, y] = updatedColor;                             // Set the new pixel color at coordinate (x,y)
-                      progressBar.PerformStep();                              // Increment progress bar
-                  }
-              }*/
-            MessageBox.Show("count is " + CountValues(Image)) ;
 
-            Image = ApplyOpening(Image, GetstructureElement(), null);
+
+            // var  Image2 = ApplyErosion(Image, GetstructureElement(), null);
+
+             Image = ApplyComplement(Image);
+
+            Image = ApplyDilation(Image, GetstructureElement(), null);
+
+            MessageBox.Show("count is " + CountValues(Image));
+
             Image = ApplyComplement(Image);
+
+            // Image = ApplyAnd(Image, ApplyComplement(Image2));
+
+
+          /*  Image = ApplyOpening(Image, GetstructureElement(), null);
+            Image = ApplyComplement(Image);*/
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -91,6 +94,18 @@ namespace INFOIBV
             pictureBox2.Image = (Image)OutputImage;                         // Display output image
             progressBar.Visible = false;                                    // Hide progress bar
         }
+
+        private double[,] GetVariableStructure(int width)
+        {
+            int x = width*2 + 1;
+            int y = x;
+
+            double[,] element = new double[x,y];
+
+            return element;
+        }
+
+
 
         private int CountValues(Color[,] image)
         {
@@ -119,10 +134,9 @@ namespace INFOIBV
             for (int u = 0; u < firstImage.GetLength(0); u++)
                 for (int v = 0; v < firstImage.GetLength(1); v++)
                 {
-                    int newValue = firstImage[u, v].G == 0 && secondImage[u, v].G == 0 ? 0 : 255;
+                    int newValue = firstImage[u, v].G == 255 && secondImage[u, v].G == 255 ? 255 : 0;
                     newImage[u, v] = Color.FromArgb(newValue, newValue, newValue);
                 }
-
 
             return newImage;
         }
@@ -142,7 +156,7 @@ namespace INFOIBV
             for (int u = 0; u < firstImage.GetLength(0); u++)
                 for (int v = 0; v < firstImage.GetLength(1); v++)
                 {
-                    int newValue = firstImage[u, v].G == 0 || secondImage[u, v].G == 0 ? 0 : 255;
+                    int newValue = firstImage[u, v].G == 255 || secondImage[u, v].G == 255 ? 255 : 0;
                     newImage[u, v] = Color.FromArgb(newValue, newValue, newValue);
                 }
 
@@ -170,9 +184,9 @@ namespace INFOIBV
         {
             return new double[3,3]
             {
-                {1,1,1},
-                {1,2,1},
-                {1,1,1}
+                {0,0,0},
+                {0,0,0},
+                {0,0,0}
             };
         }
 
@@ -195,6 +209,14 @@ namespace INFOIBV
         // Function that applies the Median filter
         private Color[,] ApplyDilation(Color[,] image, double[,] structure, Color[,] controlImage)
         {
+            if (controlImage != null && (image.GetLength(0) != controlImage.GetLength(0) ||
+                image.GetLength(1) != controlImage.GetLength(1)) 
+                ) 
+            {
+                MessageBox.Show("Error images not the same size");
+                return image;
+            }
+
             int x = structure.GetLength(0);
             int y = structure.GetLength(1);
 
@@ -242,6 +264,14 @@ namespace INFOIBV
 
         private Color[,] ApplyErosion(Color[,] image, double[,] structure, Color[,] controlImage)
         {
+            if (controlImage != null && (image.GetLength(0) != controlImage.GetLength(0) ||
+                image.GetLength(1) != controlImage.GetLength(1))
+                )
+            {
+                MessageBox.Show("Error images not the same size");
+                return image;
+            }
+
             int x = structure.GetLength(0);
             int y = structure.GetLength(1);
 
