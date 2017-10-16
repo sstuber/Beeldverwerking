@@ -13,9 +13,9 @@ namespace RandomTest
 
             Random rnd = new Random();
 
-            int testLength = 10000;
+            int testLength = 100;
 
-            int amountofbuckets = 1000;
+            int amountofbuckets = 10;
 
             int[] buckets = new int[amountofbuckets];
 
@@ -33,6 +33,15 @@ namespace RandomTest
             {
                 Console.WriteLine("bucket {0} bevat {1} aantal" ,i,buckets[i]);
             }
+
+            double CumulativeChi = 0;
+
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                CumulativeChi += Math.Pow((buckets[i] - testLength), 2)  /(double)testLength;
+            }
+
+            Console.WriteLine("Cummulative Chi is {0}", CumulativeChi);
 
             Console.ReadLine();
         }
