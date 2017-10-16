@@ -11,6 +11,7 @@ namespace Onderzoek_Bussimulatie
     class BuurtRuimteZoeker
     {
         public static Random rnd = new Random();
+        public int busOffset = 2;
 
         public BuurtRuimte ZoekBuurtRuimte(Solution solution)
         {
@@ -41,14 +42,12 @@ namespace Onderzoek_Bussimulatie
             int oldplaceIndex = rnd.Next(busPlaces.Count);
             int oldplace = busPlaces[oldplaceIndex];
 
-            int newBusPlace = rnd.Next(s.peopleDistribution.Length);
+            int newBusPlace = rnd.Next(s.busDistribution.Length);
 
             // add bus code
             int counter = 0;
 
-            while (s.busDistribution[newBusPlace] ||
-                (newBusPlace + 1 < s.peopleDistribution.Length && s.busDistribution[newBusPlace + 1]) ||
-                (newBusPlace > 0 && s.busDistribution[newBusPlace - 1]))
+            while (IsInCorrectBusPlace(newBusPlace, busOffset, s.busDistribution))
             {
                 newBusPlace = rnd.Next(s.peopleDistribution.Length);
 
@@ -63,16 +62,13 @@ namespace Onderzoek_Bussimulatie
 
         public BuurtRuimte AddBusBuurtRuimte(Solution s)
         {
-            int newBusPlace = rnd.Next(s.peopleDistribution.Length);
-
+            int newBusPlace = rnd.Next(s.busDistribution.Length);
 
             int counter = 0;
 
-            while (s.busDistribution[newBusPlace] ||
-                (newBusPlace + 1 < s.peopleDistribution.Length && s.busDistribution[newBusPlace + 1]) ||
-                (newBusPlace > 0 && s.busDistribution[newBusPlace -1]))
+            while (IsInCorrectBusPlace(newBusPlace, busOffset, s.busDistribution))
             {
-                newBusPlace = rnd.Next(s.peopleDistribution.Length);
+                newBusPlace = rnd.Next(s.busDistribution.Length);
 
                 counter ++;
 
@@ -81,6 +77,18 @@ namespace Onderzoek_Bussimulatie
             }
 
             return new AddBus(s, newBusPlace);
+        }
+
+        private bool IsInCorrectBusPlace(int newPlace, int offset,  bool[] busPlaces)
+        {
+            int minimum = newPlace - offset > 0 ? newPlace - offset : 0;
+            int maximum = newPlace + offset + 1  < busPlaces.Length ? newPlace + offset + 1 : busPlaces.Length;
+
+            for(int i = minimum; i < maximum; i++)
+                if (busPlaces[i])
+                    return true;
+
+            return false;
         }
 
         public BuurtRuimte RemoveBusBuurtRuimte(Solution s)
