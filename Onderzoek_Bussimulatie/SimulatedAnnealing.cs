@@ -21,8 +21,8 @@ namespace Onderzoek_Bussimulatie
         {
             this.zoeker = new BuurtRuimteZoeker();
             _maxQ = 250;
-            t = 400000;
-            alpha = 0.95;
+            t = 250000;
+            alpha = 0.99;
 
             qCounter = _maxQ;
             iteraties = 1;
@@ -33,7 +33,7 @@ namespace Onderzoek_Bussimulatie
            // this.zoeker = new BuurtRuimteZoeker();
             _maxQ = 5000;
             this.t = t;
-            alpha = 0.95;
+            alpha = 0.99;
 
             qCounter = _maxQ;
             iteraties = 1;
@@ -133,8 +133,8 @@ namespace Onderzoek_Bussimulatie
 
             iteraties++;
 
-            if (iteraties % 10000 == 0)
-                Console.WriteLine(iteraties);
+          /*  if (iteraties % 10000 == 0)
+                Console.WriteLine(iteraties);*/
         }
     }
 }
