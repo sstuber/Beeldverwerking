@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms.VisualStyles;
 
 namespace INFOIBV
 {
@@ -78,21 +79,170 @@ namespace INFOIBV
             progressBar.Visible = false;                                    // Hide progress bar
         }
 
-        #region objectDetection
+        #region CombinedContourLabeling
 
+        private Color[,] ObjectDetection(Color[,] image)
+        {
+            // Create Lists containing the contours
+            List<Contour> outerContours = new List<Contour>();
+            List<Contour> innerContours = new List<Contour>();
+
+            int[,] labelMap = RegionLabeling(outerContours, innerContours, image);
+            Color[,] newImage = convertIntsToColors(labelMap);
+
+            return newImage;
+        }
+
+        private int[,] RegionLabeling(List<Contour> outerContours, List<Contour> innerContours, Color[,] image)
+        {
+            // Create label map and set initial values to 0
+            int[,] labelMap = new int[InputImage.Size.Width, InputImage.Size.Height];
+            for (int i = 0; i < labelMap.GetLength(0); i++)
+                for (int j = 0; j < labelMap.GetLength(1); j++)
+                    labelMap[i, j] = 0;
+
+            int regionCounter = 0;
+            for (int y = 0; y < InputImage.Size.Height; y++)
+            {
+                int currentLabel = 0;
+                for (int x = 0; x < InputImage.Size.Width; x++)
+                {
+                    // Check if current pixel is foreground
+                    if (image[x, y].G == 1)
+                    {
+                        if (currentLabel != 0)
+                            labelMap[x, y] = currentLabel;
+                        else
+                        {
+                            currentLabel = labelMap[x, y];
+                            if (currentLabel == 0) // Create new outer contour
+                            {
+                                regionCounter++;
+                                currentLabel = regionCounter;
+                                // Trace the contour
+                                var startPoint = new Coordinate(x, y);
+                                var contour = TraceContour(startPoint, 0, currentLabel, image, labelMap);
+                                outerContours.Add(contour); // Add to the outerContours
+                                labelMap[x, y] = currentLabel;
+                            }
+                        }
+                    }
+                    else // Background pixel
+                    {
+                        if (currentLabel != 0)
+                        {
+                            if (labelMap[x, y] == 0)
+                            {
+                                var startPoint = new Coordinate(x - 1, y);
+                                var contour = TraceContour(startPoint, 1, currentLabel, image, labelMap);
+                                innerContours.Add(contour); // Add to the innerContours
+                            }
+                            currentLabel = 0;
+                        }
+                    }
+                }
+            }
+
+            return labelMap;
+        }
+
+        private Contour TraceContour(Coordinate start, int initDirection, int label, Color[,] image, int[,] labelMap)
+        {
+            var contour = new Contour();
+            // Find next point in contour
+            var nextPoint = FindNextPoint(start, initDirection, image, labelMap);
+            // Add coordinate to the contour
+            contour.Coordinates.Add(nextPoint.Item1);
+            var prevCoord = start;
+            var current = nextPoint.Item1;
+            bool done = start == nextPoint.Item1;
+
+            while (!done)
+            {
+                labelMap[current.x, current.y] = label;
+                int newDirection = (nextPoint.Item2 + 6) % 8;
+                var afterNextPoint = FindNextPoint(current, newDirection, image, labelMap);
+                // Update previous and current point
+                prevCoord = current;
+                current = afterNextPoint.Item1;
+                // Check if back at start coordinate
+                done = (prevCoord == start) && (current == nextPoint.Item1);
+                if (!done)
+                    contour.Coordinates.Add(afterNextPoint.Item1);
+            }
+
+            return contour;
+        }
+
+        private Tuple<Coordinate, int> FindNextPoint(Coordinate start, int direction, Color[,] image, int[,] labelMap)
+        {
+            // Search in 7 directions
+            for (int i = 0; i < 7; i++)
+            {
+                var delta = DeltaCoordinate(direction);
+                var newCoordinate = new Coordinate(start.x + delta.x, start.y + delta.y);
+                if (image[newCoordinate.x, newCoordinate.y].G == 0)
+                {
+                    labelMap[newCoordinate.x, newCoordinate.y] = -1; // Mark background as visited
+                    direction = (direction + 1) % 8;
+                }
+                else
+                    return Tuple.Create(newCoordinate, direction);
+            }
+            // Returning to start point because no next point was found
+            return Tuple.Create(start, direction);
+        }
+
+        // Returns coordinate based on direction
+        private Coordinate DeltaCoordinate(int direction)
+        {
+            Coordinate deltaCoordinate = new Coordinate(0, 0);
+
+            // Set coordinate depending on direction
+            switch (direction)
+            {
+                case 0:
+                    deltaCoordinate = new Coordinate(1,0);
+                    break;
+                case 1:
+                    deltaCoordinate = new Coordinate(1, 1);
+                    break;
+                case 2:
+                    deltaCoordinate = new Coordinate(0, 1);
+                    break;
+                case 3:
+                    deltaCoordinate = new Coordinate(-1, 1);
+                    break;
+                case 4:
+                    deltaCoordinate = new Coordinate(-1, 0);
+                    break;
+                case 5:
+                    deltaCoordinate = new Coordinate(-1, -1);
+                    break;
+                case 6:
+                    deltaCoordinate = new Coordinate(0, -1);
+                    break;
+                case 7:
+                    deltaCoordinate = new Coordinate(1, -1);
+                    break;               
+            }
+
+            return deltaCoordinate;
+        }
+
+        #endregion
+
+        #region old objectDetection
+        /*
         private Color[,] ObjectDetection(Color[,] image)
         {
             Color[,] newImage;
 
-
-
             int[,] intArray = RegionLabeling(convertColorToInts(image));
             newImage = convertIntsToColors(intArray);
 
-           // int count = tellInts.Count;
-
             return newImage;
-        }
+        }*/
 
         private Color[,] convertIntsToColors(int[,]array)
         { 
@@ -122,6 +272,7 @@ namespace INFOIBV
                     return newImage;
         }
 
+        /*
         private int[,] RegionLabeling(int[,] image)
         {
 
@@ -171,7 +322,7 @@ namespace INFOIBV
                 // set label according found highest label
 
                   /*  if (highestLabel == 0)
-                        continue;*/
+                        continue;
 
                     // introduce new label
                     if (highestLabel == 1 || image[x,y] == 1)
@@ -204,7 +355,7 @@ namespace INFOIBV
             }
 
 
-            /*// resolve collisions 
+            // resolve collisions 
             foreach (var maintuple in collisionList)
             {
                 foreach (var subtuple in collisionList)
@@ -216,7 +367,6 @@ namespace INFOIBV
                         subtuple.mainLabel = maintuple.mainLabel;
                 }
             }
-            */
 
            for (int y = 0; y < InputImage.Size.Height; y++)
                 for (int x = 0; x < InputImage.Size.Width; x++)
@@ -249,9 +399,9 @@ namespace INFOIBV
             return returnArray;
 
         }
+*/
+        #endregion
 
-#endregion
-            
         #region preprocessing
 
         private Color[,] Preprocessing(Color[,] image)
