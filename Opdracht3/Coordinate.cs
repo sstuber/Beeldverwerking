@@ -16,9 +16,19 @@
             return cor1.x == cor2.x && cor1.y == cor2.y;
         }
 
-        public static bool operator !=(Coordinate cor1, Coordinate cor2)
+        public static bool operator != (Coordinate cor1, Coordinate cor2)
         {
             return cor1.x != cor2.x || cor1.y != cor2.y;
+        }
+
+        public static Coordinate operator + (Coordinate cor1, Coordinate cor2)
+        {
+            return new Coordinate(cor1.x + cor2.x, cor1.y + cor2.y);
+        }
+
+        public static Coordinate operator - (Coordinate cor1, Coordinate cor2)
+        {
+            return new Coordinate(cor1.x - cor2.x, cor1.y - cor2.y);
         }
     }
 }

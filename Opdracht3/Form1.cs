@@ -183,7 +183,7 @@ namespace INFOIBV
             for (int i = 0; i < 7; i++)
             {
                 var delta = DeltaCoordinate(direction);
-                 var newCoordinate = new Coordinate(start.x + delta.x, start.y + delta.y);
+                var newCoordinate = start + delta;
                 if (image[newCoordinate.x, newCoordinate.y].G == 0)
                 {
                     labelMap[newCoordinate.x, newCoordinate.y] = -1; // Mark background as visited
