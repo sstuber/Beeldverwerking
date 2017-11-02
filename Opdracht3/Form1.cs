@@ -153,18 +153,21 @@ namespace INFOIBV
             var nextPoint = FindNextPoint(start, initDirection, image, labelMap);
             // Add coordinate to the contour
             contour.Coordinates.Add(nextPoint.Item1);
+            int newDirection = nextPoint.Item2;
             var prevCoord = start;
             var current = nextPoint.Item1;
             bool done = start == nextPoint.Item1;
 
             while (!done)
-            {
+             {
                 labelMap[current.x, current.y] = label;
-                int newDirection = (nextPoint.Item2 + 6) % 8;
+                newDirection = (newDirection + 6) % 8;
                 var afterNextPoint = FindNextPoint(current, newDirection, image, labelMap);
                 // Update previous and current point
                 prevCoord = current;
                 current = afterNextPoint.Item1;
+                newDirection = afterNextPoint.Item2;
+
                 // Check if back at start coordinate
                 done = (prevCoord == start) && (current == nextPoint.Item1);
                 if (!done)
@@ -180,7 +183,7 @@ namespace INFOIBV
             for (int i = 0; i < 7; i++)
             {
                 var delta = DeltaCoordinate(direction);
-                var newCoordinate = new Coordinate(start.x + delta.x, start.y + delta.y);
+                 var newCoordinate = new Coordinate(start.x + delta.x, start.y + delta.y);
                 if (image[newCoordinate.x, newCoordinate.y].G == 0)
                 {
                     labelMap[newCoordinate.x, newCoordinate.y] = -1; // Mark background as visited
