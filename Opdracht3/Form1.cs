@@ -15,6 +15,7 @@ namespace INFOIBV
     {
         private Bitmap InputImage;
         private Bitmap OutputImage;
+        private double sqrtOfTwo = Math.Sqrt(2);
 
         public INFOIBV()
         {
@@ -231,6 +232,36 @@ namespace INFOIBV
             }
 
             return deltaCoordinate;
+        }
+
+        private double ContourLength(Contour contour)
+        {
+            return contour.Coordinates.Sum(obj => directionLength(obj.Item2));
+        }
+
+        private double directionLength(int direction)
+        {
+            double length = 0;
+
+            switch (direction)
+            {
+                case 0:
+                case 2:
+                case 4:
+                case 6:
+                   // deltaCoordinate = new Coordinate(1, 0);
+                    length = 1;
+                    break;
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+           //         deltaCoordinate = new Coordinate(1, 1);
+                    length = sqrtOfTwo;
+                    break;
+            }
+
+            return length;
         }
 
         #endregion
