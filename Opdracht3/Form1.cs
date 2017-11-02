@@ -152,7 +152,7 @@ namespace INFOIBV
             // Find next point in contour
             var nextPoint = FindNextPoint(start, initDirection, image, labelMap);
             // Add coordinate to the contour
-            contour.Coordinates.Add(nextPoint.Item1);
+            contour.Coordinates.Add(nextPoint);
             int newDirection = nextPoint.Item2;
             var prevCoord = start;
             var current = nextPoint.Item1;
@@ -169,9 +169,9 @@ namespace INFOIBV
                 newDirection = afterNextPoint.Item2;
 
                 // Check if back at start coordinate
-                done = (prevCoord == start) && (current == nextPoint.Item1);
+                    done = (prevCoord == start) && (current == nextPoint.Item1);
                 if (!done)
-                    contour.Coordinates.Add(afterNextPoint.Item1);
+                    contour.Coordinates.Add(afterNextPoint);
             }
 
             return contour;
@@ -261,7 +261,7 @@ namespace INFOIBV
                     if (!tellInts.ContainsKey(array[x, y]))
                     {
                         tellInts.Add(array[x, y], totalInts);
-                        totalInts++;
+                        totalInts+= 3;
                     }
                 }
 

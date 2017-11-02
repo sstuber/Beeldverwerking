@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace INFOIBV
 {
     public class Contour
     {
-        public List<Coordinate> Coordinates;
+        public List<Tuple<Coordinate, int>> Coordinates;
 
         public Contour()
         {
-            Coordinates = new List<Coordinate>();
+            Coordinates = new List<Tuple<Coordinate,int>>();
         }
     }
 }
