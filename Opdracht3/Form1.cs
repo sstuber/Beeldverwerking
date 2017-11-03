@@ -147,6 +147,27 @@ namespace INFOIBV
             return labelMap;
         }
 
+        private double ContourArea(Contour contour)
+        {
+
+            //return contour.Coordinates.Sum(obj => directionLength(obj.Item2));
+            var coordinates = contour.Coordinates;
+            int M = coordinates.Count;
+
+            double total = 0;
+
+            for (int i = 0; i < M; i++)
+            {
+                Coordinate coordinateI = coordinates[i].Item1;
+                Coordinate coordinateJ = coordinates[i + 1 >= coordinates.Count  ?  0 : i +1].Item1;
+
+                double tmp =  coordinateI.x * (coordinateJ.y % M) - (coordinateJ.x%M) * coordinateI.y;
+                total += tmp;
+            }
+
+            return total/2;
+        }
+
         private Contour TraceContour(Coordinate start, int initDirection, int label, Color[,] image, int[,] labelMap)
         {
             var contour = new Contour();
