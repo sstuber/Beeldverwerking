@@ -91,6 +91,18 @@ namespace INFOIBV
             int[,] labelMap = RegionLabeling(outerContours, innerContours, image);
             Color[,] newImage = convertIntsToColors(labelMap);
 
+            double test = ContourArea(outerContours[0]);
+            double test2 = ContourLength(outerContours[0]);
+
+            double test3 = ContourCircularity(outerContours[0]);
+
+         //   newImage = MakeBoundingBox(newImage, outerContours[0]);
+
+            var foundContours = FindMac(outerContours);
+
+            foreach (var contour in foundContours)
+                newImage = MakeBoundingBox(newImage, contour);
+
             return newImage;
         }
 
@@ -206,6 +218,14 @@ namespace INFOIBV
             {
                 var delta = DeltaCoordinate(direction);
                 var newCoordinate = start + delta;
+
+                if (newCoordinate.x < 0 || newCoordinate.y < 0 || newCoordinate.x >= image.GetLength(0) ||
+                    newCoordinate.y >= image.GetLength(1))
+                {
+                    direction = (direction + 1) % 8;
+                    continue;
+                }
+
                 if (image[newCoordinate.x, newCoordinate.y].G == 0)
                 {
                     labelMap[newCoordinate.x, newCoordinate.y] = -1; // Mark background as visited
@@ -216,6 +236,14 @@ namespace INFOIBV
             }
             // Returning to start point because no next point was found
             return Tuple.Create(start, direction);
+        }
+
+        private double ContourCircularity(Contour contour)
+        {
+            double contourLength = ContourLength(contour);
+            double contourArea = ContourArea(contour);
+
+            return contourArea/Math.Pow(contourLength, 2) * 4 * Math.PI;
         }
 
         // Returns coordinate based on direction
@@ -283,6 +311,81 @@ namespace INFOIBV
             }
 
             return length;
+        }
+
+        private List<Contour> FindMac(List<Contour> contoursList)
+        {
+            List<Contour> returnList = new List<Contour>();
+
+            foreach (var contour in contoursList)
+            {
+                double circularity = ContourCircularity(contour);
+
+                if (circularity > 0.08 && circularity < 0.12)
+                    returnList.Add(contour);
+            }
+
+            return returnList;
+        }
+
+
+        private Color[,] MakeBoundingBox(Color[,] image, Contour contour)
+        {
+            var corners = FindBoundingBox(contour, image.GetLength(0), image.GetLength(1));
+
+            Color boxColor = Color.SpringGreen;
+
+            var current = corners.Item1; // topleft
+
+            while (current.x != corners.Item2.x)
+            {
+                image[current.x, current.y] = boxColor;
+                current.x++;
+            }
+
+            while (current.y != corners.Item2.y)
+            {
+                image[current.x, current.y] = boxColor;
+                current.y++;
+            }
+
+            while (current.x != corners.Item1.x)
+            {
+                image[current.x, current.y] = boxColor;
+                current.x--;
+            }
+
+            while (current.y != corners.Item1.y)
+            {
+                image[current.x, current.y] = boxColor;
+                current.y--;
+            }
+
+
+            return image;
+        }
+
+        private Tuple<Coordinate, Coordinate> FindBoundingBox(Contour contour, int x, int y)
+        {
+            Coordinate topLeft = new Coordinate(x,y);
+            Coordinate bottemRight = new Coordinate(0,0);
+
+            foreach (var cor in contour.Coordinates)
+            {
+                if (topLeft.x > cor.Item1.x)
+                    topLeft.x = cor.Item1.x;
+
+                if (topLeft.y > cor.Item1.y)
+                    topLeft.y = cor.Item1.y;
+
+                if (bottemRight.x < cor.Item1.x)
+                    bottemRight.x = cor.Item1.x;
+
+                if (bottemRight.y < cor.Item1.y)
+                    bottemRight.y = cor.Item1.y;
+            }
+
+            return new Tuple<Coordinate, Coordinate>(topLeft,bottemRight);
         }
 
         #endregion
