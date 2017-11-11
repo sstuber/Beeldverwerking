@@ -156,7 +156,7 @@ namespace INFOIBV
                 }
 
                 // If more then 20% is not yellow or orange we reject the object from our found objects
-                if (misCount <  searchCount /100*20)
+                if (misCount <  searchCount /100*10)
                     newContours.Add(contour);
             }
 
