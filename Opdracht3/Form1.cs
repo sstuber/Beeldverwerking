@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -13,6 +14,8 @@ namespace INFOIBV
 {
     public partial class INFOIBV : Form
     {
+        private Random random = new Random();
+
         private Bitmap InputImage;
         private Bitmap OutputImage;
 
@@ -67,9 +70,11 @@ namespace INFOIBV
             }
 
             //==========================================================================================
-
+            var OriginalImage = Image;
             Image = Preprocessing(Image);
             Image = ObjectDetection(Image);
+            Image = ColorFiltering(OriginalImage, Image);
+
             //==========================================================================================
 
             // Copy array to output Bitmap
@@ -87,10 +92,50 @@ namespace INFOIBV
 
 #region Colorfiltering
 
-        private Color[,] ColorFiltering()
+        private Color[,] ColorFiltering(Color[,] OriginalImage, Color[,] editedImage)
         {
-            return null;
+            CompareYellow(OriginalImage);
+
+            foreach (var contour in foundContours)
+                editedImage = MakeBoundingBox(editedImage, contour);
+
+            return editedImage;
         }
+
+        private void CompareYellow(Color[,] image)
+        {
+            var newContours = new List<Contour>();
+
+            foreach (var contour in foundContours)
+            {
+
+                var searchCount = contour.Coordinates.Count()/10;
+                var misCount = 0;
+                for(int i =0; i < searchCount; i++)
+                {
+                    int j = random.Next(contour.Coordinates.Count - 1);
+                    var coordinate = contour.ContainingPixels[j];
+                    var color = image[coordinate.x, coordinate.y];
+                    var hue = color.GetHue();
+                    if (hue < 25 || hue > 62)
+                        misCount++;
+                }
+
+                if (misCount < searchCount - searchCount /5)
+                    newContours.Add(contour);
+
+                /*  var coordinate = contour.ContainingPixels[10];
+                  var hue = image[coordinate.x, coordinate.y].GetHue();
+                  if (hue >= 40 && hue <= 80  )
+                      */
+            }
+
+            foundContours = newContours;
+        }
+
+
+
+
 
 #endregion
 
@@ -116,8 +161,8 @@ namespace INFOIBV
 
             //CompareDensity(foundContours);
 
-            foreach (var contour in foundContours)
-                newImage = MakeBoundingBox(newImage, contour);
+           /* foreach (var contour in foundContours)
+                newImage = MakeBoundingBox(newImage, contour);*/
 
             newImage = DrawConvexHull(outerContours, newImage);
 
