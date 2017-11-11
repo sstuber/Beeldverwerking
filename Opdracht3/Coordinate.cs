@@ -2,13 +2,14 @@
 {
     public struct Coordinate
     {
+        // This class is our replacement for mutable tuples 
         public int x;
         public int y;
 
         public Coordinate(int xCoordinate, int yCoordinate)
         {
-            this.x = xCoordinate;
-            this.y = yCoordinate;
+            x = xCoordinate;
+            y = yCoordinate;
         }
 
         public static bool operator == (Coordinate cor1, Coordinate cor2)

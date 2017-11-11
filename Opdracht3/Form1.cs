@@ -71,9 +71,14 @@ namespace INFOIBV
 
             //==========================================================================================
             var OriginalImage = Image;
+            // make the image grayscale and apply a foreground threshold
             Image = Preprocessing(Image);
+
+            // find contours and compare circularity
             Image = ObjectDetection(Image);
-            Image = ColorFiltering(OriginalImage, Image);
+
+            // reject not yellow contours
+            Image = FinalProcess(OriginalImage);
 
             //==========================================================================================
 
@@ -92,14 +97,42 @@ namespace INFOIBV
 
 #region Colorfiltering
 
-        private Color[,] ColorFiltering(Color[,] OriginalImage, Color[,] editedImage)
+        private Color[,] FinalProcess(Color[,] OriginalImage)
         {
             CompareYellow(OriginalImage);
 
-            foreach (var contour in foundContours)
-                editedImage = MakeBoundingBox(editedImage, contour);
+            var newImage = GetFinalImage(OriginalImage);
 
-            return editedImage;
+            // add bounding boxes for our final contours
+           foreach (var contour in foundContours)
+                newImage = MakeBoundingBox(newImage, contour);
+
+            return newImage;
+        }
+
+        // Make all pixels of our found objects the original color and the other pixels black
+        private Color[,] GetFinalImage(Color[,] OriginalImage)
+        {
+            int x = OriginalImage.GetLength(0);
+            int y = OriginalImage.GetLength(1);
+
+            Color[,] newImage = new Color[x, y];
+
+            for(int i=0; i<x; i++)
+                for (int j = 0; j < y; j++)
+                {
+                    newImage[i, j] = Color.FromArgb(0, 0, 0);
+                }
+
+            foreach (var contour in foundContours)
+            {
+                foreach (var coordinate in contour.ContainingPixels)
+                {
+                    newImage[coordinate.x, coordinate.y] = OriginalImage[coordinate.x, coordinate.y];
+                }
+            }
+
+            return newImage;
         }
 
         private void CompareYellow(Color[,] image)
@@ -117,116 +150,32 @@ namespace INFOIBV
                     var coordinate = contour.ContainingPixels[j];
                     var color = image[coordinate.x, coordinate.y];
                     var hue = color.GetHue();
+                    // compare hue value of hsv to find the mostly yellow objects of our found objects
                     if (hue < 25 || hue > 62)
                         misCount++;
                 }
 
+                // If more then 20% is not yellow or orange we reject the object from our found objects
                 if (misCount <  searchCount /100*20)
                     newContours.Add(contour);
-
-                /*  var coordinate = contour.ContainingPixels[10];
-                  var hue = image[coordinate.x, coordinate.y].GetHue();
-                  if (hue >= 40 && hue <= 80  )
-                      */
             }
 
             foundContours = newContours;
         }
 
-
-
-
-
 #endregion
-
 
         #region CombinedContourLabeling
 
         private Color[,] ObjectDetection(Color[,] image)
         {
-            // Create Lists containing the contours
-
-
+            // Contourlist are globaly saved
             int[,] labelMap = RegionLabeling(outerContours, innerContours, image);
             Color[,] newImage = convertIntsToColors(labelMap);
 
-            double test = ContourArea(outerContours[0]);
-            double test2 = ContourLength(outerContours[0]);
-
-            double test3 = ContourCircularity(outerContours[0]);
-
-         //   newImage = MakeBoundingBox(newImage, outerContours[0]);
-
             foundContours = CompareCircularity(outerContours);
 
-            //CompareDensity(foundContours);
-
-           /* foreach (var contour in foundContours)
-                newImage = MakeBoundingBox(newImage, contour);*/
-
-            newImage = DrawConvexHull(outerContours, newImage);
-
             return newImage;
-        }
-
-      /*  private List<Contour> CompareDensity(List<Contour> foundContours)
-        {
-            List <Contour> returnList = new List<Contour>();
-
-            foreach (var contour in foundContours)
-            {
-                var coordinateList = new List<Coordinate>();
-                foreach (var obj in contour.Coordinates)
-                    coordinateList.Add(obj.Item1);
-
-                if (coordinateList.Count <= 5)
-                    continue;
-
-                var convexhull = ConvexHull.MakeConvexHull(coordinateList);
-
-                List<Tuple<Coordinate, int>> convexContourlist = new List<Tuple<Coordinate, int>>();
-
-                foreach (var obj in convexhull)
-                {
-                    convexContourlist.Add(new Tuple<Coordinate, int>(obj,0));
-                }
-
-                var tmp = new Contour();
-                tmp.Coordinates = convexContourlist;
-
-                tmp.Area = ContourArea(tmp);
-
-                var areaDifference = (tmp.Area - contour.Area)/tmp.Area;
-
-
-
-            }
-            return returnList;
-        }*/
-
-
-
-        private Color[,] DrawConvexHull(List<Contour> contourlList, Color[,] image)
-        {
-            Color convexColor = Color.Fuchsia;
-            foreach (var contour in contourlList)
-            {
-                var coordinateList = new List<Coordinate>();
-                foreach (var obj in contour.Coordinates)
-                    coordinateList.Add(obj.Item1);
-
-                if (coordinateList.Count <= 5 )
-                    continue;
-
-                var convexhull = ConvexHull.MakeConvexHull(coordinateList);
-
-                foreach (var coordinate in convexhull)
-                {
-                    image[coordinate.x, coordinate.y] = convexColor;
-                }
-            }
-
-            return image;
         }
 
         private int[,] RegionLabeling(List<Contour> outerContours, List<Contour> innerContours, Color[,] image)
@@ -288,11 +237,10 @@ namespace INFOIBV
 
             return labelMap;
         }
-
+        
+        // Calculate the area using the contour points
         private double ContourArea(Contour contour)
         {
-
-            //return contour.Coordinates.Sum(obj => directionLength(obj.Item2));
             var coordinates = contour.Coordinates;
             int M = coordinates.Count;
 
@@ -368,6 +316,7 @@ namespace INFOIBV
             return Tuple.Create(start, direction);
         }
 
+        // Calculate the circularity for a contour and save it
         private double ContourCircularity(Contour contour)
         {
             double contourLength = ContourLength(contour);
@@ -418,11 +367,13 @@ namespace INFOIBV
             return deltaCoordinate;
         }
 
+        // Get contour lentgh
         private double ContourLength(Contour contour)
         {
             return contour.Coordinates.Sum(obj => directionLength(obj.Item2));
         }
 
+        // Get the length for each direction type
         private double directionLength(int direction)
         {
             double length = 0;
@@ -448,6 +399,7 @@ namespace INFOIBV
             return length;
         }
 
+        // Calculate circularity of all outercontours and only keep contours with certain circularity
         private List<Contour> CompareCircularity(List<Contour> contoursList)
         {
             List<Contour> returnList = new List<Contour>();
@@ -463,7 +415,7 @@ namespace INFOIBV
             return returnList;
         }
 
-
+        // draw a bouding box around a contour
         private Color[,] MakeBoundingBox(Color[,] image, Contour contour)
         {
             var corners = FindBoundingBox(contour, image.GetLength(0), image.GetLength(1));
@@ -497,7 +449,6 @@ namespace INFOIBV
                 current.y--;
             }
 
-
             return image;
         }
 
@@ -526,18 +477,7 @@ namespace INFOIBV
 
         #endregion
 
-        #region old objectDetection
-        /*
-        private Color[,] ObjectDetection(Color[,] image)
-        {
-            Color[,] newImage;
-
-            int[,] intArray = RegionLabeling(convertColorToInts(image));
-            newImage = convertIntsToColors(intArray);
-
-            return newImage;
-        }*/
-
+        // convert labels to a viewable intermediate product
         private Color[,] convertIntsToColors(int[,]array)
         { 
             Color[,] newImage = new Color[array.GetLength(0), array.GetLength(1)];
@@ -563,150 +503,18 @@ namespace INFOIBV
                     newImage[x, y] = Color.FromArgb(value, value, value);
                 }
 
-                    return newImage;
+             return newImage;
         }
-
-        /*
-        private int[,] RegionLabeling(int[,] image)
-        {
-
-            //List<Tuple2> collisionList = new List<Tuple2>();
-            List<GraphNode> graphList = new List<GraphNode>();
-            
-            int allTimeHighestLabel = 1;
-            for (int y = 0; y < InputImage.Size.Height; y++)
-            {
-                for (int x = 0; x < InputImage.Size.Width; x++)
-                {
-                    List<int> seenLabels = new List<int>();
-
-
-                    if (image[x, y] == 0)
-                        continue;
-
-                    int highestLabel = 0;
-
-                    //check for existing labels in top 3 blocks ignore if out of bounds
-                    for (int i = -1; i < 2; i++)
-                    {
-                        if (y - 1 < 0)
-                            break;
-                        if (x + i < 0 || x + i >= InputImage.Size.Width)
-                            continue;
-
-                        // save all the seen labels in a list
-                        if (image[x + i, y - 1] > 1 && !seenLabels.Contains(image[x + i, y - 1]))
-                            seenLabels.Add(image[x + i, y - 1]);
-
-                        if (image[x + i, y - 1] > highestLabel)
-                            highestLabel = image[x + i, y - 1];
-
-                    }
-
-                    // test left for existing label, ignore if out of bounds
-                    if (x - 1 > 0)
-                    {
-                        if(image[x -1, y ] > 1 && !seenLabels.Contains(image[x -1, y]))
-                            seenLabels.Add(image[x -1, y ]);
-
-                        if (image[x - 1, y] > highestLabel)
-                            highestLabel = image[x - 1, y];
-                    }
-                
-                // set label according found highest label
-
-                  /*  if (highestLabel == 0)
-                        continue;
-
-                    // introduce new label
-                    if (highestLabel == 1 || image[x,y] == 1)
-                    {
-                        allTimeHighestLabel++;
-                        highestLabel = allTimeHighestLabel;
-                        graphList.Add(new GraphNode(highestLabel));
-
-                    }
-
-                    foreach (var label in seenLabels)
-                    {
-                        if(label == highestLabel)
-                            continue;
-
-                        GraphNode node1 = graphList.Find(testnode => testnode.label == highestLabel);
-                        GraphNode node2 = graphList.Find(testnode =>  testnode.label == label );
-
-                        if (node1.label < node2.label)
-                            node2.ParentNode = node1;
-                        else
-                            node1.ParentNode = node2;
-                        //collisionList.Add(new Tuple2(highestLabel,label));
-                    }
-
-                    // set label
-                    //Color newColor = Color.FromArgb(highestLabel,highestLabel,highestLabel);
-                    image[x, y] = highestLabel;                
-                }
-            }
-
-
-            // resolve collisions 
-            foreach (var maintuple in collisionList)
-            {
-                foreach (var subtuple in collisionList)
-                {
-                    if (subtuple.Equals(maintuple))
-                        continue;
-
-                    if (maintuple.subLabel == subtuple.mainLabel)
-                        subtuple.mainLabel = maintuple.mainLabel;
-                }
-            }
-
-           for (int y = 0; y < InputImage.Size.Height; y++)
-                for (int x = 0; x < InputImage.Size.Width; x++)
-                    //if there is a label
-                    if (image[x, y] > 0)
-                    {
-                        GraphNode currentNode = graphList.Find(testnode => testnode.label == image[x,y]);
-                        int g = image[x, y];
-                        while (currentNode.ParentNode!= null)
-                        {
-                            currentNode = currentNode.ParentNode;
-                        }
-                        image[x, y] = currentNode.label;
-
-                    }
-
-            return image;
-        }
-
-        private int[,] convertColorToInts(Color[,] image)
-        {
-            int[,] returnArray = new int[InputImage.Size.Width,InputImage.Size.Height];
-
-            for (int y = 0; y < InputImage.Size.Height; y++)
-                for (int x = 0; x < InputImage.Size.Width; x++)
-                {
-                    returnArray[x, y] = image[x, y].G;
-                }
-
-            return returnArray;
-
-        }
-*/
-        #endregion
 
         #region preprocessing
 
         private Color[,] Preprocessing(Color[,] image)
         {
-            Color[,] newImage;// = new Color[image.GetLength(0), image.GetLength(1)];
+            Color[,] newImage;
 
             newImage = ApplyGrayScale(image);
             newImage = ApplyContrastAdjustment(newImage);
-            //newImage = ApplyGaussianFilter(2, 2, 2, newImage);
             newImage = ApplyMedianFilter(3, 3, newImage);
-            //newImage = ApplyEdgeDetection(GetSobelEdgeFilter(), newImage);
             newImage = ApplyThreshold(FindForegroundThreshold(newImage), newImage);
             return newImage;
         }
@@ -847,151 +655,6 @@ namespace INFOIBV
             }
 
             return newImage;
-        }
-
-        private double[,] GetSobelEdgeFilter()
-        {
-            double[,] filter = new double[3, 3]
-            {
-                {-1,0,1},
-                {-2,0,2},
-                {-1,0,1}
-            };
-
-            return filter;
-        }
-
-        // Function that turns the kernel clockwise
-        private double[,] ClockwiseFilterTurn(double[,] filter)
-        {
-            double[,] turnedFitler = new double[3, 3];
-
-            for (int i = 0; i < 3; i++)
-                for (int j = 0; j < 3; j++)
-                    turnedFitler[i, j] = filter[3 - j - 1, i];
-
-            return turnedFitler;
-        }
-
-        private Color[,] ApplyGaussianFilter(int x, int y, int sigma, Color[,] image)
-        {
-            double[,] filter = makeGaussianFilterBox(x, y, sigma);
-            Color[,] newImage = new Color[image.GetLength(0), image.GetLength(1)];
-
-            int centerX = (int)Math.Ceiling((double)x / 2);
-            int centerY = (int)Math.Ceiling((double)y / 2);
-
-            for (int u = 0; u < image.GetLength(0); u++)
-                for (int v = 0; v < image.GetLength(1); v++)
-                {
-                    double newValue = 0;
-                    double weigth = 0;
-
-                    // Loop through the filter while taking the borders of the image into account
-                    for (int i = 0; i < x; i++)
-                        for (int j = 0; j < y; j++)
-                        {
-                            int tempU = u + i - centerX - 1;
-                            int tempV = v + j - centerY - 1;
-                            if (tempU < 0)
-                                tempU = 0;
-
-                            if (tempU > image.GetLength(0))
-                                tempU = image.GetLength(0) - 1;
-
-                            if (tempV < 0)
-                                tempV = 0;
-
-                            if (tempV > image.GetLength(1))
-                                tempV = image.GetLength(1) - 1;
-
-                            weigth += filter[i, j];
-                            newValue += image[tempU, tempV].G * filter[i, j];
-                        }
-
-                    newValue = newValue * (1 / weigth);
-                    int intValue = (int)newValue;
-                    Color newColor = Color.FromArgb(intValue, intValue, intValue);
-                    newImage[u, v] = newColor;
-                }
-
-            return newImage;
-        }
-        private double[,] makeGaussianFilterBox(int x, int y, int sigma)
-        {
-            double[,] filter = new double[x, y];
-            double noemer = 2 * sigma * sigma;
-
-            int centerX = (int)Math.Ceiling((double)x / 2);
-            int centerY = (int)Math.Ceiling((double)y / 2);
-
-            for (int i = 0; i < x; i++)
-                for (int j = 0; j < y; j++)
-                {
-                    double teller = Math.Pow(i - centerX, 2) + Math.Pow(j - centerY, 2);
-                    filter[i, j] = Math.Pow(Math.E, -(teller / noemer));
-                }
-
-            return filter;
-        }
-
-        // Function that applies the actual edge detection on an image using the Sobel filter
-        private Color[,] ApplyEdgeDetection(double[,] filter, Color[,] image)
-        {
-            double[,] HxValues = new double[image.GetLength(0), image.GetLength(1)];
-            double[,] HyValues = new double[image.GetLength(0), image.GetLength(1)];
-
-            double[,] turnedFilter = ClockwiseFilterTurn(filter);
-
-            int centerX = (int)Math.Ceiling((double)filter.GetLength(0) / 2);
-            int centerY = (int)Math.Ceiling((double)filter.GetLength(1) / 2);
-
-            for (int u = 0; u < image.GetLength(0); u++)
-                for (int v = 0; v < image.GetLength(1); v++)
-                {
-                    double weigth = 0;
-                    double newValuex = 0;
-                    double newValuey = 0;
-
-                    // Loop through the filter while taking the borders of the image into account
-                    for (int i = 0; i < filter.GetLength(0); i++)
-                        for (int j = 0; j < filter.GetLength(1); j++)
-                        {
-                            int tempU = u + i - centerX - 1;
-                            int tempV = v + j - centerY - 1;
-                            if (tempU < 0)
-                                tempU = 0;
-
-                            if (tempU > image.GetLength(0))
-                                tempU = image.GetLength(0) - 1;
-
-                            if (tempV < 0)
-                                tempV = 0;
-
-                            if (tempV > image.GetLength(1))
-                                tempV = image.GetLength(1) - 1;
-                            weigth += filter[i, j] > 0 ? filter[i, j] : -filter[i, j];
-
-                            newValuex += image[tempU, tempV].G * filter[i, j];
-                            newValuey += image[tempU, tempV].G * turnedFilter[i, j];
-                        }
-
-                    newValuex = newValuex * (1 / weigth);
-                    newValuey = newValuey * (1 / weigth);
-                    HxValues[u, v] = newValuex;
-                    HyValues[u, v] = newValuey;
-                }
-
-            Color[,] edgeStrengthImage = new Color[image.GetLength(0), image.GetLength(1)];
-
-            for (int u = centerX - 1; u < image.GetLength(0) - centerX; u++)
-                for (int v = centerY - 1; v < image.GetLength(1) - centerY; v++)
-                {
-                    var edgeStrength = (int)Math.Sqrt(Math.Pow(HxValues[u, v], 2) + Math.Pow(HyValues[u, v], 2));
-                    edgeStrengthImage[u, v] = Color.FromArgb(edgeStrength, edgeStrength, edgeStrength);
-                }
-
-            return edgeStrengthImage;
         }
 
         private Color[,] ApplyMedianFilter(int x, int y,  Color[,] image)
