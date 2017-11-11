@@ -109,11 +109,11 @@ namespace INFOIBV
             foreach (var contour in foundContours)
             {
 
-                var searchCount = contour.Coordinates.Count()/10;
+                double searchCount = contour.Coordinates.Count/100* 20;
                 var misCount = 0;
                 for(int i =0; i < searchCount; i++)
                 {
-                    int j = random.Next(contour.Coordinates.Count - 1);
+                    int j = random.Next(contour.ContainingPixels.Count - 1);
                     var coordinate = contour.ContainingPixels[j];
                     var color = image[coordinate.x, coordinate.y];
                     var hue = color.GetHue();
@@ -121,7 +121,7 @@ namespace INFOIBV
                         misCount++;
                 }
 
-                if (misCount < searchCount - searchCount /5)
+                if (misCount <  searchCount /100*20)
                     newContours.Add(contour);
 
                 /*  var coordinate = contour.ContainingPixels[10];
