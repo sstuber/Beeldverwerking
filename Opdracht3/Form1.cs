@@ -15,6 +15,11 @@ namespace INFOIBV
     {
         private Bitmap InputImage;
         private Bitmap OutputImage;
+
+        List<Contour> outerContours = new List<Contour>();
+        List<Contour> innerContours = new List<Contour>();
+        List<Contour> foundContours = new List<Contour>();
+
         private double sqrtOfTwo = Math.Sqrt(2);
 
         public INFOIBV()
@@ -80,13 +85,22 @@ namespace INFOIBV
             progressBar.Visible = false;                                    // Hide progress bar
         }
 
+#region Colorfiltering
+
+        private Color[,] ColorFiltering()
+        {
+            return null;
+        }
+
+#endregion
+
+
         #region CombinedContourLabeling
 
         private Color[,] ObjectDetection(Color[,] image)
         {
             // Create Lists containing the contours
-            List<Contour> outerContours = new List<Contour>();
-            List<Contour> innerContours = new List<Contour>();
+
 
             int[,] labelMap = RegionLabeling(outerContours, innerContours, image);
             Color[,] newImage = convertIntsToColors(labelMap);
@@ -98,7 +112,9 @@ namespace INFOIBV
 
          //   newImage = MakeBoundingBox(newImage, outerContours[0]);
 
-            var foundContours = CompareCircularity(outerContours);
+            foundContours = CompareCircularity(outerContours);
+
+            //CompareDensity(foundContours);
 
             foreach (var contour in foundContours)
                 newImage = MakeBoundingBox(newImage, contour);
@@ -108,11 +124,40 @@ namespace INFOIBV
             return newImage;
         }
 
-        private List<Contour> CompareDensity(List<Contour> foundContours)
+      /*  private List<Contour> CompareDensity(List<Contour> foundContours)
         {
+            List <Contour> returnList = new List<Contour>();
 
-            return null;
-        }
+            foreach (var contour in foundContours)
+            {
+                var coordinateList = new List<Coordinate>();
+                foreach (var obj in contour.Coordinates)
+                    coordinateList.Add(obj.Item1);
+
+                if (coordinateList.Count <= 5)
+                    continue;
+
+                var convexhull = ConvexHull.MakeConvexHull(coordinateList);
+
+                List<Tuple<Coordinate, int>> convexContourlist = new List<Tuple<Coordinate, int>>();
+
+                foreach (var obj in convexhull)
+                {
+                    convexContourlist.Add(new Tuple<Coordinate, int>(obj,0));
+                }
+
+                var tmp = new Contour();
+                tmp.Coordinates = convexContourlist;
+
+                tmp.Area = ContourArea(tmp);
+
+                var areaDifference = (tmp.Area - contour.Area)/tmp.Area;
+
+
+
+            }
+            return returnList;
+        }*/
 
 
 
@@ -157,7 +202,11 @@ namespace INFOIBV
                     if (image[x, y].G == 1)
                     {
                         if (currentLabel != 0)
+                        {
                             labelMap[x, y] = currentLabel;
+                            var contour = outerContours.Find(obj => obj.Label == currentLabel);
+                            contour.ContainingPixels.Add(new Coordinate(x,y));
+                        }
                         else
                         {
                             currentLabel = labelMap[x, y];
@@ -170,6 +219,9 @@ namespace INFOIBV
                                 var contour = TraceContour(startPoint, 0, currentLabel, image, labelMap);
                                 outerContours.Add(contour); // Add to the outerContours
                                 labelMap[x, y] = currentLabel;
+                                contour.Label = currentLabel;
+                                contour.ContainingPixels.Add(new Coordinate(x,y));
+                                
                             }
                         }
                     }
@@ -359,7 +411,7 @@ namespace INFOIBV
             {
                 double circularity = ContourCircularity(contour);
 
-                if (circularity > 0.08 && circularity < 0.12)
+                if (circularity > 0.05 && circularity < 0.15)
                     returnList.Add(contour);
             }
 
@@ -378,6 +430,7 @@ namespace INFOIBV
             while (current.x != corners.Item2.x)
             {
                 image[current.x, current.y] = boxColor;
+
                 current.x++;
             }
 
@@ -454,7 +507,7 @@ namespace INFOIBV
                     if (!tellInts.ContainsKey(array[x, y]))
                     {
                         tellInts.Add(array[x, y], totalInts);
-                        totalInts+= 3;
+                        totalInts+= 1;
                     }
                 }
 
