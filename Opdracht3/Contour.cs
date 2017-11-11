@@ -6,6 +6,9 @@ namespace INFOIBV
     public class Contour
     {
         public List<Tuple<Coordinate, int>> Coordinates;
+        public double Length;
+        public double Area;
+        public double Circularity;
 
         public Contour()
         {

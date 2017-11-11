@@ -98,12 +98,45 @@ namespace INFOIBV
 
          //   newImage = MakeBoundingBox(newImage, outerContours[0]);
 
-            var foundContours = FindMac(outerContours);
+            var foundContours = CompareCircularity(outerContours);
 
             foreach (var contour in foundContours)
                 newImage = MakeBoundingBox(newImage, contour);
 
+            newImage = DrawConvexHull(outerContours, newImage);
+
             return newImage;
+        }
+
+        private List<Contour> CompareDensity(List<Contour> foundContours)
+        {
+
+            return null;
+        }
+
+
+
+        private Color[,] DrawConvexHull(List<Contour> contourlList, Color[,] image)
+        {
+            Color convexColor = Color.Fuchsia;
+            foreach (var contour in contourlList)
+            {
+                var coordinateList = new List<Coordinate>();
+                foreach (var obj in contour.Coordinates)
+                    coordinateList.Add(obj.Item1);
+
+                if (coordinateList.Count <= 5 )
+                    continue;
+
+                var convexhull = ConvexHull.MakeConvexHull(coordinateList);
+
+                foreach (var coordinate in convexhull)
+                {
+                    image[coordinate.x, coordinate.y] = convexColor;
+                }
+            }
+
+            return image;
         }
 
         private int[,] RegionLabeling(List<Contour> outerContours, List<Contour> innerContours, Color[,] image)
@@ -242,8 +275,13 @@ namespace INFOIBV
         {
             double contourLength = ContourLength(contour);
             double contourArea = ContourArea(contour);
+            double contourCircularity = contourArea/Math.Pow(contourLength, 2)*4*Math.PI;
 
-            return contourArea/Math.Pow(contourLength, 2) * 4 * Math.PI;
+            contour.Length = contourLength;
+            contour.Area = contourArea;
+            contour.Circularity = contourCircularity;
+
+            return contourCircularity;
         }
 
         // Returns coordinate based on direction
@@ -313,7 +351,7 @@ namespace INFOIBV
             return length;
         }
 
-        private List<Contour> FindMac(List<Contour> contoursList)
+        private List<Contour> CompareCircularity(List<Contour> contoursList)
         {
             List<Contour> returnList = new List<Contour>();
 
