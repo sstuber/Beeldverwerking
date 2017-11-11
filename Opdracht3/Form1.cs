@@ -75,7 +75,7 @@ namespace INFOIBV
             Image = Preprocessing(Image);
 
             // find contours and compare circularity
-            Image = ObjectDetection(Image);
+            ObjectDetection(Image);
 
             // reject not yellow contours
             Image = FinalProcess(OriginalImage);
@@ -167,15 +167,13 @@ namespace INFOIBV
 
         #region CombinedContourLabeling
 
-        private Color[,] ObjectDetection(Color[,] image)
+        private void ObjectDetection(Color[,] image)
         {
             // Contourlist are globaly saved
             int[,] labelMap = RegionLabeling(outerContours, innerContours, image);
-            Color[,] newImage = convertIntsToColors(labelMap);
 
             foundContours = CompareCircularity(outerContours);
 
-            return newImage;
         }
 
         private int[,] RegionLabeling(List<Contour> outerContours, List<Contour> innerContours, Color[,] image)
@@ -476,35 +474,6 @@ namespace INFOIBV
         }
 
         #endregion
-
-        // convert labels to a viewable intermediate product
-        private Color[,] convertIntsToColors(int[,]array)
-        { 
-            Color[,] newImage = new Color[array.GetLength(0), array.GetLength(1)];
-
-            Dictionary<int, int> tellInts = new Dictionary<int, int>();
-
-            int totalInts = 2;
-
-            for (int y = 0; y < InputImage.Size.Height; y++)
-                for (int x = 0; x < InputImage.Size.Width; x++)
-                {
-                    if (!tellInts.ContainsKey(array[x, y]))
-                    {
-                        tellInts.Add(array[x, y], totalInts);
-                        totalInts+= 1;
-                    }
-                }
-
-            for (int y = 0; y < InputImage.Size.Height; y++)
-                for (int x = 0; x < InputImage.Size.Width; x++)
-                {
-                    int value = tellInts[array[x, y]];
-                    newImage[x, y] = Color.FromArgb(value, value, value);
-                }
-
-             return newImage;
-        }
 
         #region preprocessing
 
